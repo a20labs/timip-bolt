@@ -103,7 +103,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Dashboard',
     href: '/',
     icon: 'Home',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true
   },
@@ -112,7 +112,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Catalog',
     href: '/catalog',
     icon: 'Music',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true,
     children: [
@@ -121,7 +121,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Tracks',
         href: '/catalog/tracks',
         icon: 'Music',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -130,7 +130,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Albums / EPs',
         href: '/catalog/albums',
         icon: 'Disc3',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -139,7 +139,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Assets & Stems',
         href: '/catalog/assets',
         icon: 'Music',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -151,7 +151,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Releases',
     href: '/releases',
     icon: 'Disc3',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true,
     children: [
@@ -160,7 +160,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Planner',
         href: '/releases/planner',
         icon: 'Calendar',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -170,7 +170,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Compliance',
         href: '/releases/compliance',
         icon: 'CheckCircle',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -179,7 +179,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Milestones',
         href: '/releases/milestones',
         icon: 'Target',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -191,7 +191,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Commerce',
     href: '/commerce',
     icon: 'ShoppingBag',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true,
     children: [
@@ -200,7 +200,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Storefront',
         href: '/commerce/storefront',
         icon: 'Store',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -209,7 +209,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Orders & Fulfillment',
         href: '/commerce/orders',
         icon: 'ShoppingBag',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -218,7 +218,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Pricing / Coupons',
         href: '/commerce/pricing',
         icon: 'DollarSign',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -230,7 +230,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Community',
     href: '/community',
     icon: 'Users',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true,
     children: [
@@ -239,7 +239,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Fan Hub',
         href: '/community/fan-hub',
         icon: 'Users',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -248,7 +248,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Membership Tiers',
         href: '/community/tiers',
         icon: 'Heart',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -260,7 +260,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Analytics',
     href: '/analytics',
     icon: 'BarChart3',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true,
     children: [
@@ -269,7 +269,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Audience',
         href: '/analytics/audience',
         icon: 'Users',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['free', 'pro', 'enterprise'],
         enabled: true
       },
@@ -278,7 +278,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Revenue',
         href: '/analytics/revenue',
         icon: 'DollarSign',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -288,7 +288,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Campaigns',
         href: '/analytics/campaigns',
         icon: 'BarChart3',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -300,7 +300,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Finances',
     href: '/finances',
     icon: 'DollarSign',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['pro', 'enterprise'],
     enabled: true,
     requiresUpgrade: true,
@@ -310,7 +310,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Payouts & Splits',
         href: '/finances/payouts',
         icon: 'CreditCard',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['pro', 'enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -320,7 +320,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
         label: 'Taxes',
         href: '/finances/taxes',
         icon: 'FileText',
-        roles: ['artist', 'manager', 'label_admin'],
+        roles: ['admin', 'artist', 'manager', 'label_admin'],
         subscription_tiers: ['enterprise'],
         enabled: true,
         requiresUpgrade: true
@@ -332,7 +332,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'AI Team',
     href: '/ai-team',
     icon: 'Bot',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true
   },
@@ -341,7 +341,7 @@ const CREATOR_NAVIGATION: NavigationItem[] = [
     label: 'Settings',
     href: '/settings',
     icon: 'Settings',
-    roles: ['artist', 'manager', 'label_admin'],
+    roles: ['admin', 'artist', 'manager', 'label_admin'],
     subscription_tiers: ['free', 'pro', 'enterprise'],
     enabled: true
   }
@@ -432,7 +432,7 @@ export function useNavigation() {
     }
 
     // Determine which navigation set to use
-    const baseNavigation = ['artist', 'manager', 'label_admin'].includes(userRole) 
+    const baseNavigation = ['admin', 'artist', 'manager', 'label_admin'].includes(userRole) 
       ? CREATOR_NAVIGATION 
       : FAN_NAVIGATION;
 
