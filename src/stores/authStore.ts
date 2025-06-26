@@ -30,7 +30,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
   currentWorkspace: null,
   authTimestamp: 0, // Initialize timestamp
-  setUser: (user) => set({ user, loading: false, authTimestamp: Date.now() }), // Update timestamp when user changes
+  setUser: (user) => {
+    console.log('🔐 AuthStore.setUser called:', {
+      email: user?.email,
+      role: user?.role,
+      timestamp: Date.now(),
+      userObject: user
+    });
+    set({ user, loading: false, authTimestamp: Date.now() });
+    
+    // Add a small delay and then log again to verify state persistence
+    setTimeout(() => {
+      const currentState = get();
+      console.log('🔐 AuthStore state after setUser (100ms later):', {
+        hasUser: !!currentState.user,
+        email: currentState.user?.email,
+        loading: currentState.loading
+      });
+    }, 100);
+  },
   setCurrentWorkspace: (workspaceId) => set({ currentWorkspace: workspaceId }),
   signOut: async () => {
     try {

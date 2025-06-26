@@ -50,10 +50,31 @@ export function Sidebar() {
   const { currentTier, checkFeatureAccess, upgradeModal, closeUpgradeModal } = useSubscription();
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
   
-  // Debug logging
+  // Debug logging with more detail
   React.useEffect(() => {
-    console.log('📱 Sidebar render - User:', user?.email, 'Navigation items:', navigation.length);
+    console.log('📱 Sidebar render effect - User details:', {
+      hasUser: !!user,
+      email: user?.email,
+      role: user?.role,
+      navigationCount: navigation.length,
+      timestamp: Date.now()
+    });
+    
+    if (navigation.length === 0 && user) {
+      console.warn('⚠️ Sidebar: User exists but no navigation items!', {
+        user: user,
+        userRole: user.role || user.user_metadata?.role
+      });
+    }
   }, [user, navigation]);
+  
+  // Add a separate effect to track just navigation changes
+  React.useEffect(() => {
+    console.log('📱 Sidebar navigation changed:', {
+      count: navigation.length,
+      items: navigation.map(item => ({ id: item.id, label: item.label, href: item.href }))
+    });
+  }, [navigation]);
   
   // Force re-render when user changes by resetting expanded items
   React.useEffect(() => {

@@ -6,6 +6,7 @@ import { AuthPage } from './components/auth/AuthPage';
 import { PhoneDialer } from './components/dialer/PhoneDialer';
 import { PWAComponents } from './components/PWAComponents';
 import { MobileOptimizer } from './components/MobileOptimizer';
+import { DebugPanel } from './components/DebugPanel';
 // import { PWAInstallPrompt } from './components/PWAInstallPrompt'; // DISABLED
 import { VocabularyProvider } from './contexts/VocabularyContext';
 import { PlayerProvider } from './components/player/PlayerContext';
@@ -67,9 +68,21 @@ function AppContent() {
   const { user, loading } = useAuthStore();
   const { isDialerOpen, closeDialer, selectedAgent, agentAvatar } = useDialerStore();
 
-  // Debug logging for authentication state
+  // Debug logging for authentication state with more detail
   useEffect(() => {
-    console.log('🚀 App - User state changed:', user?.email, 'Loading:', loading);
+    console.log('🚀 App - Authentication state changed:', {
+      hasUser: !!user,
+      email: user?.email,
+      role: user?.role,
+      loading: loading,
+      timestamp: Date.now(),
+      userObject: user
+    });
+    
+    // Also log the entire user object in production for debugging
+    if (user) {
+      console.log('🚀 App - Full user object:', JSON.stringify(user, null, 2));
+    }
   }, [user, loading]);
 
   useEffect(() => {
@@ -89,6 +102,7 @@ function AppContent() {
   return (
     <VocabularyProvider>
       <PlayerProvider>
+        <DebugPanel />
         <Suspense fallback={<LoadingSpinner />}>
           {user ? (
             <Layout>
@@ -169,6 +183,18 @@ function App() {
   useEffect(() => {
     // Initialize offline store on app start
     offlineStore.init().catch(console.error);
+    
+    // Add debug functions to window for console access
+    (window as unknown as Record<string, unknown>).enableDebugMode = () => {
+      localStorage.setItem('debug-mode', 'true');
+      window.location.reload();
+    };
+    
+    (window as unknown as Record<string, unknown>).debugAuthState = () => {
+      const authState = useAuthStore.getState();
+      console.log('🔍 Current Auth State:', authState);
+      return authState;
+    };
     
     // Cleanup background sync on unmount
     return () => {

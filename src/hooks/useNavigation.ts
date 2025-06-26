@@ -408,15 +408,26 @@ export function useNavigation() {
   const { user } = useAuthStore();
 
   const navigation = useMemo(() => {
-    console.log('🧭 Navigation recalculating - User:', user?.email, 'Role:', user?.role || user?.user_metadata?.role);
+    console.log('🧭 Navigation recalculating - User details:', {
+      hasUser: !!user,
+      email: user?.email,
+      role: user?.role,
+      userMetadataRole: user?.user_metadata?.role,
+      timestamp: Date.now()
+    });
     
-    if (!user) return [];
+    if (!user) {
+      console.log('🧭 Navigation: No user, returning empty array');
+      return [];
+    }
 
     // Get user role with priority: user.role > user_metadata.role > default
     const userRole = user.role || (user.user_metadata?.role as string) || 'fan';
+    console.log('🧭 Navigation: Determined user role:', userRole);
 
     // Superadmin gets special navigation
     if (userRole === 'superadmin') {
+      console.log('🧭 Navigation: Superadmin navigation');
       return [...SUPERADMIN_NAVIGATION, ...CREATOR_NAVIGATION];
     }
 
@@ -425,11 +436,19 @@ export function useNavigation() {
       ? CREATOR_NAVIGATION 
       : FAN_NAVIGATION;
 
+    console.log('🧭 Navigation: Using base navigation set:', 
+      baseNavigation === CREATOR_NAVIGATION ? 'CREATOR' : 'FAN', 
+      'with', baseNavigation.length, 'items'
+    );
+
     // For demo users, show ALL navigation items regardless of subscription tier
     // This allows them to see the full platform and get upgrade prompts
 
-    return baseNavigation.filter(item => {
+    const filteredNavigation = baseNavigation.filter(item => {
       const hasRole = item.roles.includes(userRole);
+      if (!hasRole) {
+        console.log('🧭 Navigation: Filtering out', item.label, 'for role', userRole);
+      }
       return hasRole && item.enabled;
     }).map(item => ({
       ...item,
@@ -438,6 +457,14 @@ export function useNavigation() {
         return hasRole && child.enabled;
       })
     }));
+
+    console.log('🧭 Navigation calculated:', {
+      totalItems: filteredNavigation.length,
+      userRole: userRole,
+      items: filteredNavigation.map(item => ({ id: item.id, label: item.label, roles: item.roles }))
+    });
+    
+    return filteredNavigation;
   }, [user]); // Use full user object to trigger re-render on any user change
 
   return { navigation };
