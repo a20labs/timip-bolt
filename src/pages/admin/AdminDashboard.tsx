@@ -15,6 +15,7 @@ import {
   Target,
   Globe,
   Phone,
+  Key,
   ToggleLeft as Toggle,
   Edit
 } from 'lucide-react';
@@ -23,6 +24,7 @@ import { Button } from '../../components/ui/Button';
 import { FeatureFlagManager } from '../../components/admin/FeatureFlagManager';
 import { AuditLogViewer } from '../../components/admin/AuditLogViewer';
 import { LexiconManager } from '../../components/admin/LexiconManager';
+import { PAMDashboard } from '../../components/admin/PAMDashboard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 
@@ -60,6 +62,7 @@ const adminTabs = [
   { id: 'dashboard', name: 'Dashboard', icon: Target },
   { id: 'users', name: 'User Management', icon: Users },
   { id: 'workspaces', name: 'Workspaces', icon: Database },
+  { id: 'pam', name: 'PAM Security', icon: Key },
   { id: 'lexicon', name: 'Lexicon', icon: Globe },
   { id: 'features', name: 'Feature Flags', icon: Flag },
   { id: 'audit', name: 'Audit Logs', icon: Activity },
@@ -110,6 +113,8 @@ export function AdminDashboard() {
         return <FeatureFlagManager />;
       case 'audit':
         return <AuditLogViewer />;
+      case 'pam':
+        return <PAMDashboard />;
       case 'dashboard':
       default:
         return (

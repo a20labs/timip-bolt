@@ -1,73 +1,74 @@
 # Navigation Role Fix - RESOLVED ✅
 
 ## Issue
-After logging in as "Artist Demo" in production (Netlify), the navigation/sidebar did not show up until the page was refreshed. The debug panel showed:
-- User: artistdemo@truindee.com ✅
-- Role: admin ✅ 
-- Loading: false ✅
-- Navigation: 0 ❌ (Empty navigation)
+After logging in as "Artist Demo" in production (Netlify), the navigation/sidebar did not show up until the page was refreshed. Additionally, the "Fan Demo" user was showing creator navigation instead of fan navigation.
+
+Debug outputs:
+- **Artist Demo**: User=artistdemo@truindee.com | Role=admin | Loading=false | Nav=0 ❌ (Empty navigation)
+- **Fan Demo**: User=fandemo@truindee.com | Role=admin | Loading=false | Nav=9 ❌ (Wrong navigation - showing creator instead of fan)
 
 ## Root Cause
-The demo user was assigned the role `admin`, but this role was not included in any of the navigation role arrays in `useNavigation.ts`:
-- **Superadmin navigation**: uses `superadmin`
-- **Creator navigation**: uses `artist`, `manager`, `label_admin` (missing `admin`)
-- **Fan navigation**: uses `fan`, `educator`, `collector`
-
-Since `admin` wasn't in any navigation roles, the user got an empty navigation array.
+1. **Empty Navigation**: The demo users were assigned the role `admin`, but this role was not included in any of the navigation role arrays.
+2. **Wrong Navigation Type**: Both demo users were getting `admin` role, causing fan demo users to see creator navigation instead of fan navigation.
 
 ## Solution
-Updated `src/hooks/useNavigation.ts` to include `admin` role in all creator navigation items:
+Updated `src/hooks/useNavigation.ts` with a two-part fix:
 
-### Changes Made:
-1. **Updated base navigation role check**:
-   ```typescript
-   // Before:
-   const baseNavigation = ['artist', 'manager', 'label_admin'].includes(userRole) 
-   
-   // After:
-   const baseNavigation = ['admin', 'artist', 'manager', 'label_admin'].includes(userRole)
-   ```
+### Part 1: Added `admin` role to creator navigation
+```typescript
+// Updated all creator navigation role arrays to include 'admin'
+roles: ['admin', 'artist', 'manager', 'label_admin']
+```
 
-2. **Updated all creator navigation role arrays**:
-   ```typescript
-   // Before:
-   roles: ['artist', 'manager', 'label_admin']
-   
-   // After:
-   roles: ['admin', 'artist', 'manager', 'label_admin']
-   ```
+### Part 2: Added email-based role override for demo users
+```typescript
+// Special handling for demo accounts - override role based on email
+let userRole = user.role || (user.user_metadata?.role as string) || 'fan';
 
-3. **Applied to all navigation items**:
-   - Dashboard
-   - Catalog (+ all children)
-   - Releases (+ all children)
-   - Commerce (+ all children)
-   - Community (+ all children)
-   - Analytics (+ all children)
-   - Finances (+ all children)
-   - AI Team
-   - Settings
+if (user.email === 'fandemo@truindee.com') {
+  userRole = 'fan';
+  console.log('🧭 Navigation: Override demo fan role to "fan"');
+} else if (user.email === 'artistdemo@truindee.com') {
+  userRole = 'artist'; // or could be 'admin' - both work now
+  console.log('🧭 Navigation: Demo artist role confirmed as:', userRole);
+}
+```
 
-## Expected Result
-After this fix, when demo users log in with the `admin` role:
-- ✅ Navigation should immediately populate with creator navigation items
-- ✅ Sidebar should appear without requiring a page refresh
-- ✅ Debug panel should show `Nav=[number > 0]`
+## Expected Results
+After this fix:
+
+### Artist Demo (artistdemo@truindee.com):
+- ✅ Gets creator navigation (Dashboard, Catalog, Releases, Commerce, etc.)
+- ✅ Navigation appears immediately without refresh
+- ✅ Debug panel shows `Nav=[9]` (creator navigation items)
+
+### Fan Demo (fandemo@truindee.com):
+- ✅ Gets fan navigation (Home, Discover, Library, Community, Store, Profile)
+- ✅ Navigation appears immediately without refresh  
+- ✅ Debug panel shows `Nav=[6]` (fan navigation items)
+- ✅ Role override from `admin` to `fan` works correctly
 
 ## Deployment
 - ✅ Changes committed and pushed to main branch
 - ✅ Netlify auto-deployment triggered
-- ✅ Production site will update automatically
+- ✅ Production site updated
 
 ## Testing Instructions
-1. Go to production site
-2. Click "See Demo" → Login as Artist Demo
-3. Check that navigation/sidebar appears immediately
-4. Debug panel should show navigation items > 0
-5. Test navigation links work correctly
+1. **Test Artist Demo**:
+   - Go to production site → Click "See Demo" → Login as Artist Demo
+   - Should see creator navigation: Dashboard, Catalog, Releases, Commerce, Community, Analytics, Finances, AI Team, Settings
+   - Debug panel should show navigation items = 9
+
+2. **Test Fan Demo**:
+   - Go to production site → Click "See Demo" → Login as Fan Demo  
+   - Should see fan navigation: Home, Discover, Library, Community, Store, Profile
+   - Debug panel should show navigation items = 6
 
 ## Files Modified
-- `src/hooks/useNavigation.ts` - Added `admin` role to all creator navigation role arrays
+- `src/hooks/useNavigation.ts` - Added `admin` role to creator navigation + email-based role override
+- `NAVIGATION_ROLE_FIX.md` - Documentation
 
 ## Status: ✅ RESOLVED
-This fix addresses the core issue where the `admin` role wasn't recognized by the navigation system, causing empty navigation for demo users.
+Both navigation issues are now fixed:
+1. ✅ Demo users get navigation immediately (no refresh required)
+2. ✅ Each demo user type gets the correct navigation for their role
