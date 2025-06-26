@@ -175,7 +175,11 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
+    assetsDir: 'assets',
+    sourcemap: false,
   },
+  base: '/',
+  publicDir: 'public',
   optimizeDeps: {
     exclude: ['lucide-react'],
     include: ['react', 'react-dom', 'react-router-dom'],
