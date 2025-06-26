@@ -422,8 +422,18 @@ export function useNavigation() {
     }
 
     // Get user role with priority: user.role > user_metadata.role > default
-    const userRole = user.role || (user.user_metadata?.role as string) || 'fan';
-    console.log('🧭 Navigation: Determined user role:', userRole);
+    let userRole = user.role || (user.user_metadata?.role as string) || 'fan';
+    
+    // Special handling for demo accounts - override role based on email
+    if (user.email === 'fandemo@truindee.com') {
+      userRole = 'fan';
+      console.log('🧭 Navigation: Override demo fan role to "fan"');
+    } else if (user.email === 'artistdemo@truindee.com') {
+      userRole = 'artist'; // or could be 'admin' - both work now
+      console.log('🧭 Navigation: Demo artist role confirmed as:', userRole);
+    }
+    
+    console.log('🧭 Navigation: Final determined user role:', userRole);
 
     // Superadmin gets special navigation
     if (userRole === 'superadmin') {
