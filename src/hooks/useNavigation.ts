@@ -1,34 +1,6 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '../stores/authStore';
-import { useWorkspaceStore } from '../stores/workspaceStore';
 import { NavigationItem } from '../types/database';
-import { 
-  Home, 
-  Music, 
-  Disc3,
-  CheckCircle,
-  ShoppingBag, 
-  Users, 
-  BarChart3, 
-  DollarSign,
-  Settings,
-  Search,
-  Heart,
-  Library,
-  Store,
-  Shield,
-  Database,
-  Flag,
-  Bell,
-  Activity,
-  Target,
-  Globe,
-  Calendar,
-  FileText,
-  CreditCard,
-  Bot,
-  User
-} from 'lucide-react';
 
 const SUPERADMIN_NAVIGATION: NavigationItem[] = [
   {
@@ -434,12 +406,12 @@ const FAN_NAVIGATION: NavigationItem[] = [
 
 export function useNavigation() {
   const { user } = useAuthStore();
-  const { currentWorkspace } = useWorkspaceStore();
 
   const navigation = useMemo(() => {
     if (!user) return [];
 
-    const userRole = user.role || 'fan';
+    // Get user role with priority: user.role > user_metadata.role > default
+    const userRole = user.role || (user.user_metadata?.role as string) || 'fan';
 
     // Superadmin gets special navigation
     if (userRole === 'superadmin') {
@@ -453,7 +425,6 @@ export function useNavigation() {
 
     // For demo users, show ALL navigation items regardless of subscription tier
     // This allows them to see the full platform and get upgrade prompts
-    const isDemoUser = user.email?.includes('demo@truindee.com');
 
     return baseNavigation.filter(item => {
       const hasRole = item.roles.includes(userRole);
@@ -465,7 +436,7 @@ export function useNavigation() {
         return hasRole && child.enabled;
       })
     }));
-  }, [user, currentWorkspace]);
+  }, [user]); // Use full user object to trigger re-render on any user change
 
   return { navigation };
 }

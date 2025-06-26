@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Key, 
@@ -16,23 +16,22 @@ import {
   AlertTriangle,
   BarChart3,
   Shield,
-  FileText,
   Clock,
   Code,
   Webhook,
   Terminal,
   Globe,
-  Settings,
   BookOpen,
   PanelRight,
-  Database,
   HelpCircle,
-  Crown
+  Crown,
+  Download
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useSubscription } from '../../hooks/useSubscription';
+import { SubscriptionDebug } from '../debug/SubscriptionDebug';
 
 interface ApiKey {
   id: string;
@@ -91,7 +90,7 @@ export function ApiKeySettings() {
   
   const isPro = currentTier === 'pro' || currentTier === 'enterprise';
   
-  // Mock API keys for demonstration
+  // Mock API keys for demonstration purposes only - NOT REAL CREDENTIALS
   const mockApiKeys: ApiKey[] = [
     {
       id: '1',
@@ -272,8 +271,17 @@ export function ApiKeySettings() {
   // Handle delete key
   const handleDeleteKey = (keyId: string) => {
     if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
-      // In a real app, this would call the API to delete the key
-      console.log(`Deleting key: ${keyId}`);
+      // Check if it's a stored key (not a mock key)
+      const storedKeyIndex = storedApiKeys.findIndex(key => key.id === keyId);
+      if (storedKeyIndex !== -1) {
+        // Remove from stored keys
+        const updatedKeys = storedApiKeys.filter(key => key.id !== keyId);
+        saveApiKeysToStorage(updatedKeys);
+      } else {
+        // For mock keys, just show a message
+        console.log(`Cannot delete demo key: ${keyId}`);
+        alert('Demo keys cannot be deleted. This would work with real API keys.');
+      }
     }
   };
   
@@ -297,8 +305,34 @@ export function ApiKeySettings() {
       return;
     }
     
-    // In a real app, this would call the API to create a new key
-    const generatedKey = `sk_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+    // Generate demo API key (for demonstration purposes only)
+    const generatedKey = `sk_demo_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+    
+    // Create new API key object
+    const newApiKey: ApiKey = {
+      id: String(Date.now()),
+      name: newApiKeyName,
+      key: generatedKey,
+      lastUsed: 'Never',
+      createdAt: new Date().toISOString(),
+      expiresAt: newApiKeyExpiration !== 'never' ? 
+        (newApiKeyExpiration === 'custom' ? 
+          new Date(customExpirationDate).toISOString() : 
+          new Date(Date.now() + (parseInt(newApiKeyExpiration) * 24 * 60 * 60 * 1000)).toISOString()
+        ) : undefined,
+      permissions: newApiKeyPermissions,
+      status: 'active',
+      metrics: {
+        requestsToday: 0,
+        requestsThisMonth: 0,
+        successRate: 100,
+        averageResponseTime: 0
+      }
+    };
+    
+    // Save to storage
+    const updatedKeys = [...storedApiKeys, newApiKey];
+    saveApiKeysToStorage(updatedKeys);
     
     // Show the newly created key
     setNewKey({ key: generatedKey, name: newApiKeyName });
@@ -407,8 +441,40 @@ export function ApiKeySettings() {
     return acc;
   }, {} as Record<string, typeof permissionOptions>);
   
+  // Add storage functionality for API keys
+  const [storedApiKeys, setStoredApiKeys] = useState<ApiKey[]>([]);
+
+  // Load stored API keys from localStorage on component mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('truindee_api_keys');
+      if (stored) {
+        const parsedKeys = JSON.parse(stored);
+        setStoredApiKeys(parsedKeys);
+      }
+    } catch (error) {
+      console.error('Error loading stored API keys:', error);
+    }
+  }, []);
+
+  // Save API keys to localStorage whenever they change
+  const saveApiKeysToStorage = (keys: ApiKey[]) => {
+    try {
+      localStorage.setItem('truindee_api_keys', JSON.stringify(keys));
+      setStoredApiKeys(keys);
+    } catch (error) {
+      console.error('Error saving API keys to storage:', error);
+    }
+  };
+
+  // Combine mock keys with stored keys for display
+  const allApiKeys = [...mockApiKeys, ...storedApiKeys];
+  
   return (
     <div className="space-y-6">
+      {/* Debug Component - Remove in production */}
+      <SubscriptionDebug />
+      
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
         API & Developer Tools
       </h2>
@@ -451,7 +517,7 @@ export function ApiKeySettings() {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as 'keys' | 'webhooks' | 'logs' | 'docs')}
             className={`
               flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap
               ${activeTab === tab.id
@@ -650,9 +716,9 @@ export function ApiKeySettings() {
             </div>
           )}
           
-          {mockApiKeys.length > 0 ? (
+          {allApiKeys.length > 0 ? (
             <div className="space-y-4">
-              {mockApiKeys.map((apiKey) => (
+              {allApiKeys.map((apiKey) => (
                 <div key={apiKey.id} className={`p-4 border ${
                   apiKey.status === 'expired' 
                     ? 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/10'
@@ -1519,7 +1585,7 @@ endpoint.methods[0] === 'POST' ?
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                     IP Restrictions (Optional)
-                    <HelpCircle className="w-3 h-3 text-gray-400" title="Limit API access to specific IP addresses" />
+                    <HelpCircle className="w-3 h-3 text-gray-400" />
                   </label>
                   <Input
                     placeholder="e.g., 192.168.1.1, 10.0.0.0/24"

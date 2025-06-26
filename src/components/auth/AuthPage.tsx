@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, ArrowRight, Shield, Crown, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { supabase } from '../../lib/supabase';
@@ -8,7 +9,20 @@ import { useAuthStore } from '../../stores/authStore';
 import { userRegistrationService } from '../../services/userRegistrationService';
 import type { User } from '@supabase/supabase-js';
 
+// Define ExtendedUser type locally to avoid imports
+interface ExtendedUserMetadata {
+  full_name?: string;
+  is_account_owner?: boolean;
+  workspace_id?: string | null;
+  [key: string]: unknown;
+}
+
+interface ExtendedUser extends Omit<User, 'user_metadata'> {
+  user_metadata: ExtendedUserMetadata;
+}
+
 export function AuthPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'magic' | 'password'>('magic');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +34,16 @@ export function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { setUser } = useAuthStore();
+  const [shouldNavigate, setShouldNavigate] = useState<string | null>(null);
+  const { user, setUser } = useAuthStore();
+
+  // Handle navigation after user state changes
+  useEffect(() => {
+    if (user && shouldNavigate) {
+      navigate(shouldNavigate);
+      setShouldNavigate(null);
+    }
+  }, [user, shouldNavigate, navigate]);
 
   const handleMagicLinkSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +81,9 @@ export function AuthPage() {
 
       if (error) throw error;
       if (data?.user) {
-        setUser(data.user);
+        setUser(data.user as ExtendedUser);
+        // Set navigation path - will be handled by useEffect
+        setShouldNavigate('/');
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
@@ -101,7 +126,9 @@ export function AuthPage() {
           accountType: 'artist',
         });
         
-        setUser(data.user);
+        setUser(data.user as ExtendedUser);
+        // Set navigation path - will be handled by useEffect
+        setShouldNavigate('/');
       } else {
         setMessage('Please check your email to confirm your account');
       }
@@ -135,6 +162,8 @@ export function AuthPage() {
         };
         setUser(mockUser as unknown as User);
         setMessage('Super Admin login successful!');
+        // Set navigation path - will be handled by useEffect
+        setShouldNavigate('/admin');
         return;
       }
 
@@ -162,6 +191,9 @@ export function AuthPage() {
       // Show success message with account owner status
       const ownerStatus = userProfile.is_account_owner ? ' (Account Owner)' : '';
       setMessage(`Demo login successful!${ownerStatus}`);
+      
+      // Set navigation path - will be handled by useEffect
+      setShouldNavigate('/');
       
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Demo login failed';

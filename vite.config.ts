@@ -149,7 +149,7 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: true,
+        enabled: true, // Re-enable PWA in development 
         type: 'module'
       }
     })

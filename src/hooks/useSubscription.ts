@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useWorkspaceStore } from '../stores/workspaceStore';
+import { supabase } from '../lib/supabase';
 
 type SubscriptionTier = 'free' | 'pro' | 'enterprise';
 
@@ -17,6 +18,18 @@ interface UpgradeState {
   isDemo?: boolean;
 }
 
+interface StripeSubscription {
+  customer_id: string;
+  subscription_id: string;
+  subscription_status: string;
+  price_id: string;
+  current_period_start: number;
+  current_period_end: number;
+  cancel_at_period_end: boolean;
+  payment_method_brand?: string;
+  payment_method_last4?: string;
+}
+
 export function useSubscription() {
   const { user } = useAuthStore();
   const { currentWorkspace } = useWorkspaceStore();
@@ -26,6 +39,49 @@ export function useSubscription() {
     requiredTier: 'pro',
     isDemo: false
   });
+  const [stripeSubscription, setStripeSubscription] = useState<StripeSubscription | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Map Stripe price IDs to subscription tiers
+  const PRICE_ID_TO_TIER: Record<string, SubscriptionTier> = {
+    'price_1RdyvG4fVYS0vpWMUUyTvf9q': 'free',      // Starter plan (free)
+    'price_1Rdyc84fVYS0vpWMPcMIkqbP': 'pro',       // Pro Artist plan
+    'price_1RdyfT4fVYS0vpWMgeGm7yJQ': 'enterprise' // Indie Label plan
+  };
+
+  // Fetch real subscription data from Stripe
+  useEffect(() => {
+    const fetchSubscriptionData = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Try to fetch from Supabase, but handle mock client gracefully
+        const result = await supabase
+          .from('stripe_user_subscriptions')
+          .select('*');
+
+        // Handle both real Supabase response and mock client response
+        if (result.error) {
+          console.log('No subscription data found:', result.error.message);
+          setStripeSubscription(null);
+        } else if (result.data && result.data.length > 0) {
+          setStripeSubscription(result.data[0]);
+        } else {
+          setStripeSubscription(null);
+        }
+      } catch (err) {
+        console.error('Error fetching subscription:', err);
+        setStripeSubscription(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSubscriptionData();
+  }, [user?.id]);
 
   const getCurrentTier = (): SubscriptionTier => {
     // Superadmin has access to everything
@@ -35,16 +91,32 @@ export function useSubscription() {
     
     // For demo users, always show as 'free' to trigger upgrade prompts
     if (user?.email === 'artistdemo@truindee.com') {
-      return 'free'; // Keep internal tier as 'free' even though we display as "Starter"
+      return 'free';
     }
-    return currentWorkspace?.subscription_tier || 'free';
+
+    // Check real Stripe subscription data
+    if (stripeSubscription?.subscription_status === 'active' && stripeSubscription?.price_id) {
+      const tier = PRICE_ID_TO_TIER[stripeSubscription.price_id];
+      if (tier) {
+        return tier;
+      }
+    }
+
+    // Fall back to workspace subscription_tier (for backwards compatibility)
+    // But only use if we don't have Stripe data
+    if (!stripeSubscription && currentWorkspace?.subscription_tier) {
+      return currentWorkspace.subscription_tier;
+    }
+
+    // Default to free tier
+    return 'free';
   };
 
   const checkFeatureAccess = (
     requiredTier: SubscriptionTier,
     featureName: string
   ): FeatureAccess => {
-    let currentTier = getCurrentTier();
+    const currentTier = getCurrentTier();
     
     // Superadmin bypasses all restrictions
     if (user?.role === 'superadmin') {
@@ -64,14 +136,6 @@ export function useSubscription() {
     };
 
     const hasAccess = tierHierarchy[currentTier] >= tierHierarchy[requiredTier];
-
-    // Display names for tiers (for UI only)
-    const getTierDisplayName = (tier: SubscriptionTier): string => {
-      if (tier === 'free') return 'Starter';
-      if (tier === 'pro') return 'Pro Artist';
-      if (tier === 'enterprise') return 'Indie Label';
-      return tier;
-    };
     
     return {
       hasAccess,
@@ -129,6 +193,8 @@ export function useSubscription() {
     features,
     upgradeModal,
     closeUpgradeModal,
-    checkFeatureAccess
+    checkFeatureAccess,
+    stripeSubscription,
+    isLoading
   };
 }

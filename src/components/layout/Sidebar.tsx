@@ -50,6 +50,11 @@ export function Sidebar() {
   const { currentTier, checkFeatureAccess, upgradeModal, closeUpgradeModal } = useSubscription();
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
   
+  // Force re-render when user changes by resetting expanded items
+  React.useEffect(() => {
+    setExpandedItems([]);
+  }, [user?.id, user?.email]);
+  
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
       prev.includes(itemId) 
@@ -73,13 +78,6 @@ export function Sidebar() {
     // Check user.role first, then try user_metadata.role, fallback to 'artist'
     return user?.role || (user?.user_metadata?.role as string) || 'artist';
   };
-
-  const getUserHandle = () => {
-    if (user?.email === 'artistdemo@truindee.com') return 'artist';
-    if (user?.email === 'fandemo@truindee.com') return 'fan';
-    return user?.email?.split('@')[0].toLowerCase() || 'user';
-  };
-  const isFan = getUserRole() === 'fan';
 
   const handleNavClick = (item: NavigationItem, e: React.MouseEvent) => {
     // Skip any validation for artistdemo@truindee.com
@@ -127,54 +125,8 @@ export function Sidebar() {
             />
           </div>
         </div>
-        
-        <nav className="px-3 space-y-1">
-         {isFan ? (
-           // Fan navigation
-           <>
-             <div
-               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-             >
-               <Home className="w-5 h-5" />
-               <Link to="/\" className="flex items-center gap-3 w-full">
-                 <span className="flex-1">Home</span>
-               </Link>
-             </div>
-             <div
-               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-             >
-               <Search className="w-5 h-5" />
-               <Link to="/discover" className="flex items-center gap-3 w-full">
-                 <span className="flex-1">Discover</span>
-               </Link>
-             </div>
-             <div
-               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-             >
-               <Library className="w-5 h-5" />
-               <Link to="/library" className="flex items-center gap-3 w-full">
-                 <span className="flex-1">Library</span>
-               </Link>
-             </div>
-             <div
-               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-             >
-               <Users className="w-5 h-5" />
-               <Link to="/community" className="flex items-center gap-3 w-full">
-                 <span className="flex-1">Community</span>
-               </Link>
-             </div>
-             <div
-               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-             >
-               <Store className="w-5 h-5" />
-               <Link to="/store" className="flex items-center gap-3 w-full">
-                 <span className="flex-1">Store</span>
-               </Link>
-             </div>
-           </>
-         ) : (
-          navigation.map((item) => {
+         <nav className="px-3 space-y-1">
+          {navigation.map((item) => {
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
             const active = isActive(item.href);
             const hasChildren = item.children && item.children.length > 0;
@@ -269,8 +221,7 @@ export function Sidebar() {
                 )}
               </div>
             );
-          })
-         )}
+          })}
         </nav>
 
         {/* Subscription Tier Badge */}
@@ -284,7 +235,7 @@ export function Sidebar() {
               {currentTier === 'free' ? 'STARTER' : 
                currentTier === 'pro' ? 'PRO ARTIST' :
                currentTier === 'enterprise' ? 'INDIE LABEL' : 
-               currentTier.toUpperCase()} PLAN
+               String(currentTier || 'STARTER').toUpperCase()} PLAN
             </p>
             <p className="text-xs opacity-80 mt-1">
               {currentTier === 'free' 

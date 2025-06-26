@@ -26,6 +26,21 @@ function createMockSupabaseClient() {
     { id: '5', name: 'Jazz', active: true, sort_order: 5 }
   ];
 
+  // Mock data for Stripe subscriptions (for testing subscription logic)
+  const mockStripeSubscriptions = [
+    {
+      customer_id: 'cus_demo123',
+      subscription_id: 'sub_demo123',
+      subscription_status: 'active',
+      price_id: 'price_1Rdyc84fVYS0vpWMPcMIkqbP', // Pro Artist plan
+      current_period_start: Math.floor(Date.now() / 1000) - 86400 * 15, // 15 days ago
+      current_period_end: Math.floor(Date.now() / 1000) + 86400 * 15, // 15 days from now
+      cancel_at_period_end: false,
+      payment_method_brand: 'visa',
+      payment_method_last4: '4242'
+    }
+  ];
+
   const mockGenres = [
     { id: '1', category_id: '1', name: 'House', active: true, sort_order: 1 },
     { id: '2', category_id: '1', name: 'Techno', active: true, sort_order: 2 },
@@ -79,7 +94,6 @@ function createMockSupabaseClient() {
     const builder = {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       select: (_columns?: string) => builder,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       insert: (values: MockDataItem | MockDataItem[]) => ({ 
         data: Array.isArray(values) ? values : [values], 
         error: null,
@@ -134,7 +148,7 @@ function createMockSupabaseClient() {
         data: { user: null, session: null }, 
         error: null 
       }),
-      signInWithPassword: async ({ email }) => {
+      signInWithPassword: async ({ email }: { email: string; password?: string }) => {
         // For demo purposes, mock a successful sign in
         const mockUser = {
           id: `user-${Date.now()}`,
@@ -153,7 +167,7 @@ function createMockSupabaseClient() {
         
         return { data: { user: mockUser, session: { user: mockUser } }, error: null };
       },
-      signUp: async ({ email, options }) => {
+      signUp: async ({ email, options }: { email: string; password?: string; options?: { data?: Record<string, unknown> } }) => {
         // For demo purposes, mock a successful sign up
         const mockUser = {
           id: `user-${Date.now()}`,
@@ -194,6 +208,11 @@ function createMockSupabaseClient() {
       // Handle feature flags table
       if (table === 'feature_flags') {
         return createMockQueryBuilder(mockFeatureFlags);
+      }
+
+      // Handle Stripe subscription data
+      if (table === 'stripe_user_subscriptions') {
+        return createMockQueryBuilder(mockStripeSubscriptions);
       }
 
       // Handle public schema tables (default behavior)

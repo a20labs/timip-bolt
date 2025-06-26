@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import { Music, Play, Shield, Users, BarChart3, ShoppingBag, CheckCircle, Bot, Crown, ArrowRight, Info, FileText, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Music, Shield, Users, BarChart3, ShoppingBag, CheckCircle, Bot, Crown, ArrowRight, Info } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { useAuthStore } from '../stores/authStore';
-import { userRegistrationService } from '../services/userRegistrationService';
 import { Footer } from '../components/ui/Footer';
 
 const heroSlides = [
@@ -128,8 +126,6 @@ const pricingTiers = [
 
 export function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { setUser } = useAuthStore();
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate(); 
 
   useEffect(() => {
@@ -138,35 +134,6 @@ export function LandingPage() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleArtistDemo = async () => {
-    setLoading(true);
-    try {
-      const userProfile = await userRegistrationService.createDemoAccount('artistdemo@truindee.com', 'artist');
-      
-      // Create mock user object for auth store
-      const mockUser = {
-        id: userProfile.id,
-        email: userProfile.email,
-        role: userProfile.role,
-        user_metadata: {
-          full_name: userProfile.full_name,
-          is_account_owner: userProfile.is_account_owner,
-          workspace_id: userProfile.workspace_id,
-        },
-        app_metadata: {},
-        created_at: userProfile.created_at,
-        updated_at: userProfile.updated_at,
-        aud: 'authenticated',
-      };
-
-      setUser(mockUser as any);
-    } catch (error) {
-      console.error('Demo login failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Regular sign in function
   const handleSignIn = () => {
@@ -192,7 +159,7 @@ export function LandingPage() {
             <a href="#pricing" className="text-sm text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Pricing</a>
           </nav>
           
-          <Button onClick={handleSignIn} loading={loading}>
+          <Button onClick={handleSignIn}>
             Sign In
           </Button>
         </div>
@@ -269,8 +236,7 @@ export function LandingPage() {
                 variant="outline" 
                 size="lg" 
                 className="border-white text-white"
-                onClick={handleArtistDemo}
-                loading={loading}
+                onClick={() => navigate('/auth')}
               >
                 See Demo
               </Button>
@@ -489,16 +455,23 @@ export function LandingPage() {
                   {tier.name === 'Pro' && <Crown className="w-4 h-4 mr-2" />}
                   {tier.cta}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="border-white text-white"
-                  onClick={() => navigate('/subscription')}
-                >
-                  View Pricing
-                </Button>
               </motion.div>
             ))}
+          </div>
+          
+          {/* Demo Button for Pricing Section */}
+          <div className="text-center mt-12">
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+              Want to see TruIndee in action first?
+            </p>
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => navigate('/auth')}
+              className="mx-auto"
+            >
+              See Demo
+            </Button>
           </div>
         </div>
       </section>
@@ -533,8 +506,7 @@ export function LandingPage() {
               size="lg" 
               variant="outline"
               className="border-white text-white"
-              onClick={handleArtistDemo}
-              loading={loading}
+              onClick={() => navigate('/auth')}
             >
               See Demo
             </Button>

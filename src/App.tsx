@@ -6,7 +6,7 @@ import { AuthPage } from './components/auth/AuthPage';
 import { PhoneDialer } from './components/dialer/PhoneDialer';
 import { PWAComponents } from './components/PWAComponents';
 import { MobileOptimizer } from './components/MobileOptimizer';
-import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+// import { PWAInstallPrompt } from './components/PWAInstallPrompt'; // DISABLED
 import { VocabularyProvider } from './contexts/VocabularyContext';
 import { PlayerProvider } from './components/player/PlayerContext';
 import { useAuthStore } from './stores/authStore';
@@ -173,14 +173,20 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
         <AppContent />
         <PWAComponents />
         <MobileOptimizer />
-        <PWAInstallPrompt 
+        {/* PWAInstallPrompt - DISABLED */}
+        {/* <PWAInstallPrompt 
           onInstall={() => console.log('PWA installed successfully')}
           onDismiss={() => console.log('PWA install prompt dismissed')}
-        />
+        /> */}
       </BrowserRouter>
       {ReactQueryDevtools && import.meta.env.DEV && (
         <Suspense fallback={null}>

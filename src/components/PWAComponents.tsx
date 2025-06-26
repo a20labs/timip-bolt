@@ -1,9 +1,9 @@
 import React from 'react';
 import { usePWA } from '../hooks/usePWA';
-import { Download, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 export const PWAComponents: React.FC = () => {
-  const { needRefresh, offlineReady, updateSW, isOnline, isInstallable, installApp } = usePWA();
+  const { needRefresh, updateSW } = usePWA();
 
   return (
     <>
@@ -26,8 +26,8 @@ export const PWAComponents: React.FC = () => {
         </div>
       )}
 
-      {/* Offline Ready Notification */}
-      {offlineReady && (
+      {/* Offline Ready Notification - DISABLED */}
+      {/* {offlineReady && (
         <div className="fixed top-4 right-4 z-50 bg-green-600 text-white p-4 rounded-lg shadow-lg max-w-sm">
           <div className="flex items-center gap-3">
             <WifiOff className="h-5 w-5 flex-shrink-0" />
@@ -37,10 +37,10 @@ export const PWAComponents: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
-      {/* Install App Prompt */}
-      {isInstallable && (
+      {/* Install App Prompt - DISABLED */}
+      {/* {isInstallable && (
         <div className="fixed bottom-4 left-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-lg shadow-lg md:left-auto md:right-4 md:max-w-sm">
           <div className="flex items-center gap-3">
             <Download className="h-5 w-5 flex-shrink-0" />
@@ -56,10 +56,10 @@ export const PWAComponents: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
-      {/* Network Status Indicator */}
-      <div className="fixed top-4 left-4 z-40">
+      {/* Network Status Indicator - DISABLED */}
+      {/* <div className="fixed top-4 left-4 z-40">
         <div
           className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition-colors ${
             isOnline
@@ -74,7 +74,7 @@ export const PWAComponents: React.FC = () => {
           )}
           <span>{isOnline ? 'Online' : 'Offline'}</span>
         </div>
-      </div>
+      </div> */}
     </>
   );
 };
