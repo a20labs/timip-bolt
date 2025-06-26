@@ -73,22 +73,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 // Initialize auth state safely
 const initializeAuth = async () => {
   try {
+    console.log('🔐 AuthStore: Initializing auth...');
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('🔐 AuthStore: Initial session:', session);
     useAuthStore.getState().setUser(session?.user as ExtendedUser ?? null);
   } catch (error) {
-    console.error('Auth initialization error:', error);
+    console.error('🔐 AuthStore: Auth initialization error:', error);
     useAuthStore.getState().setUser(null);
   }
 };
 
 // Initialize auth
+console.log('🔐 AuthStore: Starting initialization...');
 initializeAuth();
 
 // Listen for auth changes
 try {
-  supabase.auth.onAuthStateChange((_event, session) => {
+  console.log('🔐 AuthStore: Setting up auth state change listener...');
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('🔐 AuthStore: Auth state change event:', event, 'Session:', session);
     useAuthStore.getState().setUser(session?.user as ExtendedUser ?? null);
   });
 } catch (error) {
-  console.error('Auth state change listener error:', error);
+  console.error('🔐 AuthStore: Auth state change listener error:', error);
 }

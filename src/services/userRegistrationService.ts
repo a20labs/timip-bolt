@@ -45,7 +45,10 @@ export const userRegistrationService = {
    * Create a new user account with appropriate role and workspace
    */
   async createUserAccount(userData: SignUpData): Promise<UserProfile> {
+    console.log('🔐 UserRegistrationService.createUserAccount called:', userData);
+    
     const isFirst = await this.isFirstUser(userData.email);
+    console.log('🔐 UserRegistrationService: Is first user?', isFirst);
     
     // Determine role based on account type and whether this is the first user
     let role: string;
@@ -57,7 +60,7 @@ export const userRegistrationService = {
       role = userData.accountType;
     }
 
-    // Create workspace name
+    console.log('🔐 UserRegistrationService: Determined role:', role);
     const workspaceName = userData.workspaceName || 
       (userData.accountType === 'artist' ? `${userData.fullName}'s Studio` : `${userData.fullName}'s Collection`);
 
@@ -152,18 +155,25 @@ export const userRegistrationService = {
    * Handle demo account creation with first-user logic
    */
   async createDemoAccount(email: string, accountType: 'artist' | 'fan'): Promise<UserProfile> {
+    console.log('🔐 UserRegistrationService.createDemoAccount called:', { email, accountType });
+    
     const fullName = email === 'artistdemo@truindee.com' 
       ? 'Demo Artist' 
       : email === 'fandemo@truindee.com'
       ? 'Demo Fan'
       : 'Demo User';
 
-    return this.createUserAccount({
+    console.log('🔐 UserRegistrationService: Full name determined:', fullName);
+
+    const result = await this.createUserAccount({
       email,
       fullName,
       accountType,
       workspaceName: accountType === 'artist' ? 'Demo Studio' : 'Demo Collection',
     });
+    
+    console.log('🔐 UserRegistrationService: createUserAccount result:', result);
+    return result;
   },
 
   /**

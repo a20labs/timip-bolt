@@ -143,11 +143,13 @@ export function AuthPage() {
   };
 
   const handleDemoLogin = async (demoEmail: string, accountType: 'artist' | 'fan' | 'admin' = 'artist') => {
+    console.log('🔐 Demo login started:', { demoEmail, accountType });
     setLoading(true);
     setMessage('');
 
     try {
       if (accountType === 'admin') {
+        console.log('🔐 Demo login: Admin path');
         // Handle super admin login separately
         const mockUser = {
           id: 'super-admin-id',
@@ -169,8 +171,11 @@ export function AuthPage() {
         return;
       }
 
+      console.log('🔐 Demo login: Creating demo account via service...');
       // Use the registration service to create/login with proper first-user logic
       const userProfile = await userRegistrationService.createDemoAccount(demoEmail, accountType);
+      
+      console.log('🔐 Demo login: User profile created:', userProfile);
       
       // Create mock user object for auth store
       const mockUser = {
@@ -188,6 +193,7 @@ export function AuthPage() {
         aud: 'authenticated',
       };
 
+      console.log('🔐 Demo login: Calling setUser with:', mockUser);
       setUser(mockUser as unknown as User);
       
       // Show success message with account owner status
@@ -313,7 +319,10 @@ export function AuthPage() {
         <div className="space-y-3">
           <Button
             variant="outline"
-            onClick={() => handleDemoLogin('artistdemo@truindee.com', 'artist')}
+            onClick={() => {
+              console.log('🔐 Artist Demo button clicked');
+              handleDemoLogin('artistdemo@truindee.com', 'artist');
+            }}
             className="w-full border-gray-700 text-white hover:bg-gray-800 flex items-center justify-center"
             disabled={loading}
           >
@@ -321,7 +330,10 @@ export function AuthPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => handleDemoLogin('fandemo@truindee.com', 'fan')}
+            onClick={() => {
+              console.log('🔐 Fan Demo button clicked');
+              handleDemoLogin('fandemo@truindee.com', 'fan');
+            }}
             className="w-full border-gray-700 text-white hover:bg-gray-800 flex items-center justify-center"
             disabled={loading}
           >
