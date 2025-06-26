@@ -408,6 +408,8 @@ export function useNavigation() {
   const { user } = useAuthStore();
 
   const navigation = useMemo(() => {
+    console.log('🧭 Navigation recalculating - User:', user?.email, 'Role:', user?.role || user?.user_metadata?.role);
+    
     if (!user) return [];
 
     // Get user role with priority: user.role > user_metadata.role > default

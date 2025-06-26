@@ -17,6 +17,7 @@ interface AuthState {
   user: ExtendedUser | null;
   loading: boolean;
   currentWorkspace: string | null;
+  authTimestamp: number; // Add timestamp to force re-renders
   setUser: (user: ExtendedUser | null) => void;
   setCurrentWorkspace: (workspaceId: string) => void;
   signOut: () => Promise<void>;
@@ -28,7 +29,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   loading: true,
   currentWorkspace: null,
-  setUser: (user) => set({ user, loading: false }),
+  authTimestamp: 0, // Initialize timestamp
+  setUser: (user) => set({ user, loading: false, authTimestamp: Date.now() }), // Update timestamp when user changes
   setCurrentWorkspace: (workspaceId) => set({ currentWorkspace: workspaceId }),
   signOut: async () => {
     try {
@@ -37,7 +39,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('Sign out error:', error);
     }
-    set({ user: null, currentWorkspace: null });
+    set({ user: null, currentWorkspace: null, authTimestamp: Date.now() });
   },
   isAccountOwner: () => {
     const { user } = get();

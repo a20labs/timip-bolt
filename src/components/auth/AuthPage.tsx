@@ -39,7 +39,9 @@ export function AuthPage() {
 
   // Handle navigation after user state changes
   useEffect(() => {
+    console.log('🔐 AuthPage useEffect - User:', user?.email, 'ShouldNavigate:', shouldNavigate);
     if (user && shouldNavigate) {
+      console.log('🔐 AuthPage navigating to:', shouldNavigate);
       navigate(shouldNavigate);
       setShouldNavigate(null);
     }
@@ -192,8 +194,16 @@ export function AuthPage() {
       const ownerStatus = userProfile.is_account_owner ? ' (Account Owner)' : '';
       setMessage(`Demo login successful!${ownerStatus}`);
       
+      console.log('🔐 Demo login successful - User set:', mockUser.email, 'Role:', mockUser.role);
+      
+      // Add a small delay to ensure the authentication state is properly propagated
+      // before navigation, especially important in production environments
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Set navigation path - will be handled by useEffect
       setShouldNavigate('/');
+      
+      console.log('🔐 Demo login - Should navigate to: /');
       
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Demo login failed';

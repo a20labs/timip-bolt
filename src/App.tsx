@@ -67,6 +67,11 @@ function AppContent() {
   const { user, loading } = useAuthStore();
   const { isDialerOpen, closeDialer, selectedAgent, agentAvatar } = useDialerStore();
 
+  // Debug logging for authentication state
+  useEffect(() => {
+    console.log('🚀 App - User state changed:', user?.email, 'Loading:', loading);
+  }, [user, loading]);
+
   useEffect(() => {
     // Initialize offline store on app load
     offlineStore.init();

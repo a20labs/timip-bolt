@@ -50,6 +50,11 @@ export function Sidebar() {
   const { currentTier, checkFeatureAccess, upgradeModal, closeUpgradeModal } = useSubscription();
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
   
+  // Debug logging
+  React.useEffect(() => {
+    console.log('📱 Sidebar render - User:', user?.email, 'Navigation items:', navigation.length);
+  }, [user, navigation]);
+  
   // Force re-render when user changes by resetting expanded items
   React.useEffect(() => {
     setExpandedItems([]);
