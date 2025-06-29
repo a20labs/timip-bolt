@@ -35,44 +35,13 @@ export function FanLanding() {
             <span className="text-sm font-medium text-white/80">for Fans</span>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8">
-            <a 
-              href="#home" 
-              className="text-[#35A764] font-medium border-b border-[#35A764]"
-            >
-              Home
-            </a>
-            <a 
-              href="#explore" 
-              className="text-white/70 hover:text-[#35A764] transition-colors font-medium"
-            >
-              Explore
-            </a>
-            <a 
-              href="#about" 
-              className="text-white/70 hover:text-[#35A764] transition-colors font-medium"
-            >
-              About Us
-            </a>
-            <a 
-              href="#contact" 
-              className="text-white/70 hover:text-[#35A764] transition-colors font-medium"
-            >
-              Contact Us
-            </a>
-          </nav>
-
           <div className="flex items-center gap-4">
             <Search className="w-6 h-6 text-white/70 hover:text-white transition-colors cursor-pointer" />
             <Bell className="w-6 h-6 text-white/70 hover:text-white transition-colors cursor-pointer" />
-            <User className="w-6 h-6 text-white/70 hover:text-white transition-colors cursor-pointer" />
-            <button 
+            <User 
+              className="w-6 h-6 text-white/70 hover:text-white transition-colors cursor-pointer" 
               onClick={handleSignIn}
-              className="text-white border border-white/20 hover:bg-white/10 px-4 py-2 rounded-lg transition-colors"
-            >
-              Sign In
-            </button>
+            />
             <button 
               onClick={handleGetStarted}
               className="bg-[#35A764] hover:bg-[#2a8a54] text-white px-4 py-2 rounded-lg transition-colors"
