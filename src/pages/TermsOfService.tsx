@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -37,7 +36,7 @@ export function TermsOfService() {
 
         <h2>3. Subscriptions and Free Trial</h2>
         <p>
-          Our platform offers a Starter Plan that serves as a 30-day free trial. After 30 days, your account will automatically convert to a Pro Artist Plan subscription with applicable charges unless you cancel before the trial period ends.
+          Our platform offers a Starter Plan that serves as a 30-day trial. After 30 days, your account will automatically convert to a Pro Artist Plan subscription with applicable charges unless you cancel before the trial period ends.
         </p>
         <p>
           When you sign up for a subscription:

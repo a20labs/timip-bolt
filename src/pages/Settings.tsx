@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -27,7 +27,7 @@ import { CommunicationsSettings } from '../components/settings/CommunicationsSet
 import { ApiKeySettings } from '../components/settings/ApiKeySettings';
 import { IntegrationSettings } from '../components/settings/IntegrationSettings';
 import { useAuthStore } from '../stores/authStore';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useStripe } from '../hooks/useStripe';
 
 interface Agent {
@@ -41,12 +41,17 @@ interface Agent {
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [checkoutStatus, setCheckoutStatus] = useState<{
+    type: 'success' | 'canceled' | null;
+    message: string;
+  }>({ type: null, message: '' });
   const queryClient = useQueryClient();
   const { features, upgradeModal, closeUpgradeModal, currentTier } = useSubscription();
   const { user, signOut } = useAuthStore();
   const { createCheckoutSession } = useStripe();
   
-  // Enterprise tier is now called "Indie Label" in the UI, but the internal key remains "enterprise"
+  // Enterprise tier is now called "Indee Label" in the UI, but the internal key remains "enterprise"
   const isPro = currentTier === 'pro' || currentTier === 'enterprise'; // No change in the logic
 
   // Determine if user has access to advanced settings
@@ -545,13 +550,16 @@ export function Settings() {
                   <div>
                     <h4 className="font-semibold text-lg text-gray-900 dark:text-white">
                       {currentTier === 'free' ? 'Starter' : 
+                       currentTier === 'trial' ? 'Starter (30-Day Trial)' :
                        currentTier === 'pro' ? 'Pro Artist' : 
-                       currentTier === 'enterprise' ? 'Indie Label' : 
+                       currentTier === 'enterprise' ? 'Indee Label' : 
                        'Unknown Plan'}
                     </h4>
                     <p className="text-gray-600 dark:text-gray-400">
                       {currentTier === 'free' ? 
                         '5 track uploads/month, Basic analytics, Community access' : 
+                       currentTier === 'trial' ?
+                        '30-day trial, 5 track uploads/month, Basic analytics, Community access' :
                        currentTier === 'pro' ? 
                         'Unlimited tracks, Advanced analytics, API access, Priority support' : 
                        currentTier === 'enterprise' ? 
@@ -614,7 +622,7 @@ export function Settings() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h5 className="font-medium text-gray-900 dark:text-white">
-                            Indie Label
+                            Indee Label
                           </h5>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             Everything in Pro, White-labeling, Custom integrations, Dedicated support
@@ -734,6 +742,40 @@ export function Settings() {
     }
   };
 
+  // Handle checkout success/failure
+  useEffect(() => {
+    const checkout = searchParams.get('checkout');
+    if (checkout === 'success') {
+      setCheckoutStatus({
+        type: 'success',
+        message: 'Payment successful! Your subscription will be updated shortly.'
+      });
+      // Remove the checkout parameter from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('checkout');
+      setSearchParams(newSearchParams, { replace: true });
+      
+      // Clear the message after 5 seconds
+      setTimeout(() => {
+        setCheckoutStatus({ type: null, message: '' });
+      }, 5000);
+    } else if (checkout === 'canceled') {
+      setCheckoutStatus({
+        type: 'canceled',
+        message: 'Checkout was canceled. You can try again anytime.'
+      });
+      // Remove the checkout parameter from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('checkout');
+      setSearchParams(newSearchParams, { replace: true });
+      
+      // Clear the message after 5 seconds
+      setTimeout(() => {
+        setCheckoutStatus({ type: null, message: '' });
+      }, 5000);
+    }
+  }, [searchParams, setSearchParams]);
+
   return (
     <>
       <div className="space-y-6">
@@ -749,6 +791,32 @@ export function Settings() {
             </p>
           </div>
         </motion.div>
+
+        {/* Checkout Status Banner */}
+        {checkoutStatus.type && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`p-4 rounded-lg border ${
+              checkoutStatus.type === 'success'
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+                : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <p className="font-medium">{checkoutStatus.message}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCheckoutStatus({ type: null, message: '' })}
+                className="text-current"
+              >
+                ×
+              </Button>
+            </div>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
@@ -798,7 +866,7 @@ export function Settings() {
         isOpen={upgradeModal.isOpen}
         onClose={closeUpgradeModal}
         feature={upgradeModal.feature}
-        requiredTier={upgradeModal.requiredTier === 'free' ? 'pro' : upgradeModal.requiredTier as 'pro' | 'enterprise'}
+        requiredTier={upgradeModal.requiredTier === 'free' ? 'pro' : upgradeModal.requiredTier === 'trial' ? 'pro' : upgradeModal.requiredTier}
       />
     </>
   );

@@ -1,13 +1,41 @@
 // Stripe product configuration
-export const products = [
+export interface StripeProduct {
+  id: string;
+  name: string;
+  description: string;
+  priceId: string;
+  price: number;
+  mode: 'payment' | 'subscription';
+  trialDays?: number; // Optional trial period in days
+  features: string[];
+  highlighted: boolean;
+}
+
+export const products: StripeProduct[] = [
   {
-    id: 'prod_SZ796jTcCxnGDn',
-    name: 'Starter',
-    description: '5 track uploads/month, Basic analytics, Community access, Standard support, Personal AI Manager (PAM)',
-    priceId: 'price_1RdyvG4fVYS0vpWMUUyTvf9q',
+    id: 'prod_SZHXvMPJ1wJ6Gm',
+    name: 'Free',
+    description: 'Free tier with basic features',
+    priceId: '', // Free tier - no price ID needed
     price: 0,
     mode: 'subscription' as const,
     features: [
+      'Basic features',
+      'Community access',
+      'Standard support'
+    ],
+    highlighted: false
+  },
+  {
+    id: 'prod_SZ6starter', // Unique ID for Starter (will need to create in Stripe)
+    name: 'Starter',
+    description: '30-day trial then $19.99/month. 5 track uploads/month, Basic analytics, Community access, Standard support, Personal AI Manager (PAM)',
+    priceId: 'price_1RdyvG4fVYS0vpWMUUyTvf9q',
+    price: 19.99,
+    mode: 'subscription' as const,
+    trialDays: 30, // 30-day trial
+    features: [
+      '30-day trial',
       '5 track uploads/month',
       'Basic analytics',
       'Community access',
@@ -37,7 +65,7 @@ export const products = [
   },
   {
     id: 'prod_SZ6tri1Y9Ubik5',
-    name: 'Indie Label',
+    name: 'Indee Label',
     description: 'Unlimited tracks, Advanced analytics, API access, Priority support, Full AI team access, Commerce tools, Release scheduling, Royalty splits, White-labeling, Custom integrations, Dedicated account manager, SLA guarantees, Multi-workspace management',
     priceId: 'price_1RdyfT4fVYS0vpWMgeGm7yJQ',
     price: 249.99,

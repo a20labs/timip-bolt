@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Crown, X, Check, Zap } from 'lucide-react';
 import { Button } from './Button';
@@ -8,11 +7,19 @@ interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   feature: string;
-  requiredTier: 'pro' | 'enterprise';
+  requiredTier: 'trial' | 'pro' | 'enterprise';
   isDemo?: boolean;
 }
 
 const TIER_FEATURES = {
+  trial: [
+    '30-day free trial',
+    'Basic track uploads (5 tracks)',
+    'Standard analytics',
+    'Community access',
+    'Email support',
+    'Basic fan engagement tools'
+  ],
   pro: [
     'Advanced analytics & reporting',
     'Unlimited track uploads',
@@ -33,7 +40,7 @@ const TIER_FEATURES = {
     'Advanced compliance tools',
     'Multi-workspace management'
   ],
-  'indie label': [
+  'indee label': [
     'Everything in Pro Plan',
     'White-label platform',
     'Custom integrations',
@@ -45,6 +52,7 @@ const TIER_FEATURES = {
 };
 
 const TIER_PRICING = {
+  trial: { monthly: 0, yearly: 0 }, // Trial is free for 30 days
   pro: { monthly: 59.99, yearly: 575.90 },
   enterprise: { monthly: 249.99, yearly: 2399.90 }
 };
@@ -60,11 +68,14 @@ export function UpgradeModal({ isOpen, onClose, feature, requiredTier, isDemo = 
   // Get display name for tier
   let displayTier: string;
   if (requiredTier === 'enterprise') {
-    displayTier = 'Indie Label';
+    displayTier = 'Indee Label';
   } else if (requiredTier === 'pro') {
     displayTier = 'Pro Artist';
+  } else if (requiredTier === 'trial') {
+    displayTier = 'Starter (Trial)';
   } else {
-    displayTier = requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1);
+    // This should never happen given our type constraints, but just in case
+    displayTier = 'Unknown';
   }
 
   return (
@@ -178,7 +189,7 @@ export function UpgradeModal({ isOpen, onClose, feature, requiredTier, isDemo = 
           {/* Trust indicators */}
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
-              <span>✓ 14-day free trial</span>
+              <span>✓ 30-day free trial</span>
               <span>✓ Cancel anytime</span>
               <span>✓ No setup fees</span>
             </div>

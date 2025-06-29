@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,13 +21,13 @@ export function Button({
   to,
   ...props 
 }: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-3xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#35A764] disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-primary-600 hover:bg-primary-700 text-white shadow-lg hover:shadow-xl',
-    secondary: 'bg-secondary-600 hover:bg-secondary-700 text-white shadow-lg hover:shadow-xl',
-    outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white',
-    ghost: 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800',
+    primary: 'bg-[#35A764] hover:bg-[#2a8a54] text-white shadow-lg hover:shadow-xl',
+    secondary: 'bg-transparent border border-[#35A764] text-[#35A764] hover:bg-[#35A764] hover:text-white shadow-lg hover:shadow-xl',
+    outline: 'border-2 border-[#35A764] text-[#35A764] hover:bg-[#35A764] hover:text-white',
+    ghost: 'text-[#F0F0F1] hover:text-white hover:bg-white/10',
   };
   
   const sizes = {
@@ -42,12 +41,15 @@ export function Button({
   // If 'as' prop is provided, render as that component (e.g., Link)
   if (as) {
     const Component = as;
+    const componentProps = {
+      className: classes,
+      disabled: disabled || loading,
+      to
+    };
+    
     return (
       <Component
-        to={to}
-        className={classes}
-        disabled={disabled || loading}
-        {...props}
+        {...componentProps}
       >
         {loading && (
           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
@@ -59,12 +61,13 @@ export function Button({
   
   // If 'to' prop is provided, render as Link
   if (to) {
+    const linkProps = {
+      to,
+      className: classes
+    };
+    
     return (
-      <Link
-        to={to}
-        className={classes}
-        {...props}
-      >
+      <Link {...linkProps}>
         {loading && (
           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
         )}
@@ -73,11 +76,9 @@ export function Button({
     );
   }
   
-  // Otherwise render as button
+  // Otherwise render as button  
   return (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+    <button
       className={classes}
       disabled={disabled || loading}
       {...props}
@@ -86,6 +87,6 @@ export function Button({
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
       ) : null}
       {children}
-    </motion.button>
+    </button>
   );
 }

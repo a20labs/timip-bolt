@@ -167,6 +167,51 @@ function createMockSupabaseClient() {
         
         return { data: { user: mockUser, session: { user: mockUser } }, error: null };
       },
+      signInWithOAuth: async ({ provider, options }: { provider: string; options?: { redirectTo?: string; queryParams?: Record<string, unknown> } }) => {
+        // For demo purposes, simulate OAuth flow
+        console.log(`🔐 Mock OAuth - Provider: ${provider}, RedirectTo: ${options?.redirectTo}`);
+        
+        // Create mock user data
+        const mockUser = {
+          id: `user-${provider}-${Date.now()}`,
+          email: `demo@${provider}.com`,
+          role: 'artist',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_metadata: {
+            full_name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+            is_account_owner: true,
+            provider
+          },
+          app_metadata: {
+            provider,
+            providers: [provider]
+          },
+        };
+        
+        // Instead of redirecting, store the mock session and return a success URL
+        // This simulates the OAuth provider redirecting back to our callback
+        const redirectUrl = options?.redirectTo || `${window.location.origin}/auth/callback`;
+        const callbackUrl = `${redirectUrl}?provider=${provider}&access_token=mock_token_${Date.now()}&refresh_token=mock_refresh_${Date.now()}`;
+        
+        // Store mock session data temporarily
+        sessionStorage.setItem('mock_oauth_user', JSON.stringify(mockUser));
+        sessionStorage.setItem('mock_oauth_session', JSON.stringify({
+          access_token: `mock_token_${Date.now()}`,
+          refresh_token: `mock_refresh_${Date.now()}`,
+          user: mockUser,
+          expires_in: 3600,
+          token_type: 'bearer'
+        }));
+        
+        return { 
+          data: { 
+            url: callbackUrl,
+            provider: provider
+          }, 
+          error: null 
+        };
+      },
       signUp: async ({ email, options }: { email: string; password?: string; options?: { data?: Record<string, unknown> } }) => {
         // For demo purposes, mock a successful sign up
         const mockUser = {
@@ -182,10 +227,25 @@ function createMockSupabaseClient() {
         return { data: { user: mockUser, session: { user: mockUser } }, error: null };
       },
       signOut: async () => ({ error: null }),
-      getSession: async () => ({ 
-        data: { session: null },
-        error: null 
-      }),
+      getSession: async () => {
+        // Check for mock OAuth session first
+        const mockSession = sessionStorage.getItem('mock_oauth_session');
+        if (mockSession) {
+          const session = JSON.parse(mockSession);
+          // Clear the temporary session after retrieving it
+          sessionStorage.removeItem('mock_oauth_session');
+          sessionStorage.removeItem('mock_oauth_user');
+          return { 
+            data: { session },
+            error: null 
+          };
+        }
+        
+        return { 
+          data: { session: null },
+          error: null 
+        };
+      },
       onAuthStateChange: () => ({ 
         data: { subscription: null } 
       }),

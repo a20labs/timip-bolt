@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, Crown, Zap, ArrowLeft, AlertTriangle } from 'lucide-react';
-import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { products } from '../stripe-config';
 import { useStripe } from '../hooks/useStripe';
@@ -11,24 +10,71 @@ import { useSubscription } from '../hooks/useSubscription';
 export function SubscriptionPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [checkoutStatus, setCheckoutStatus] = useState<{
+    type: 'success' | 'canceled' | null;
+    message: string;
+  }>({ type: null, message: '' });
+  
   const { createCheckoutSession, isLoading, error } = useStripe();
   const { currentTier } = useSubscription();
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Check for checkout status in URL
+  // Check for checkout status in URL and handle plan parameter
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const checkoutStatus = params.get('checkout');
+    const checkoutParam = params.get('checkout');
+    const planParam = params.get('plan');
     
-    if (checkoutStatus === 'success') {
-      // Show success message or redirect
-      console.log('Checkout successful!');
-    } else if (checkoutStatus === 'canceled') {
-      // Show canceled message
-      console.log('Checkout canceled');
+    if (checkoutParam === 'success') {
+      setCheckoutStatus({
+        type: 'success',
+        message: '🎉 Payment successful! Your subscription is being activated. This may take a few moments.'
+      });
+      // Remove the checkout parameter from URL
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('checkout');
+      navigate({ pathname: location.pathname, search: newParams.toString() }, { replace: true });
+    } else if (checkoutParam === 'canceled') {
+      setCheckoutStatus({
+        type: 'canceled',
+        message: 'Checkout was canceled. You can select a plan and try again.'
+      });
+      // Remove the checkout parameter from URL
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('checkout');
+      navigate({ pathname: location.pathname, search: newParams.toString() }, { replace: true });
     }
-  }, [location]);
+
+    // Handle automatic plan selection and checkout from URL parameter
+    if (planParam) {
+      const product = products.find(p => p.name === planParam);
+      if (product && product.price > 0 && product.name !== 'Indee Label') {
+        // Automatically trigger checkout for paid plans (except Indee Label which is contact sales)
+        setTimeout(() => {
+          createCheckoutSession(
+            product.priceId,
+            product.mode,
+            '/settings?checkout=success'
+          );
+        }, 500); // Small delay to ensure the page is loaded
+      }
+      // Remove the plan parameter from URL after processing
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('plan');
+      navigate({ pathname: location.pathname, search: newParams.toString() }, { replace: true });
+    }
+  }, [location, navigate, createCheckoutSession]);
+  
+  // Clear status messages after 10 seconds
+  useEffect(() => {
+    if (checkoutStatus.type) {
+      const timer = setTimeout(() => {
+        setCheckoutStatus({ type: null, message: '' });
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [checkoutStatus.type]);
   
   const handleSelectPlan = (priceId: string) => {
     setSelectedPlan(priceId);
@@ -47,6 +93,49 @@ export function SubscriptionPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
+      {/* Checkout Status Banner */}
+      {checkoutStatus.type && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className={`mb-6 p-4 rounded-lg border ${
+            checkoutStatus.type === 'success'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <p className="font-medium">{checkoutStatus.message}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCheckoutStatus({ type: null, message: '' })}
+              className="text-current"
+            >
+              ×
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Stripe Error Banner */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-lg border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium">Payment Error</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <div className="mb-8">
         <Button variant="outline" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
@@ -91,17 +180,21 @@ export function SubscriptionPage() {
         </div>
       </div>
       
-      {/* Error Message */}
-      {error && (
-        <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+      {/* Checkout Status Message */}
+      {checkoutStatus.message && (
+        <div className={`mb-8 p-4 border rounded-lg text-sm ${checkoutStatus.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-red-800 dark:text-red-300">
-                Error
-              </h3>
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {error}
+            {checkoutStatus.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <p className="font-medium text-gray-900 dark:text-white">
+                {checkoutStatus.type === 'success' ? 'Success' : 'Notice'}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                {checkoutStatus.message}
               </p>
             </div>
           </div>
@@ -114,7 +207,7 @@ export function SubscriptionPage() {
           const isCurrentPlan = 
             (product.name === 'Starter' && currentTier === 'free') ||
             (product.name === 'Pro Artist' && currentTier === 'pro') ||
-            (product.name === 'Indie Label' && currentTier === 'enterprise');
+            (product.name === 'Indee Label' && currentTier === 'enterprise');
           
           return (
             <motion.div
@@ -217,7 +310,7 @@ export function SubscriptionPage() {
           </span>
           <span className="flex items-center">
             <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
-            30-Day Free Trial
+            30-Day Trial
           </span>
           <span className="flex items-center">
             <CheckCircle className="w-4 h-4 mr-2 text-green-500" />

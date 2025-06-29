@@ -2,21 +2,28 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
-const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '', 
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
+
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripe = new Stripe(stripeSecret, {
   appInfo: {
-    name: 'Bolt Integration',
+    name: 'TIMIP - TruIndee Music Platform',
     version: '1.0.0',
+    url: 'https://truindee.org',
   },
+  apiVersion: '2024-06-20',
 });
 
 // Helper function to create responses with CORS headers
 function corsResponse(body: string | object | null, status = 200) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400',
   };
 
   // For 204 No Content, don't include Content-Type or body
@@ -43,7 +50,13 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const { price_id, success_url, cancel_url, mode } = await req.json();
+    const { price_id, success_url, cancel_url, mode = 'subscription' } = await req.json();
+    
+    // Validate auth header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return corsResponse({ error: 'Missing Authorization header' }, 401);
+    }
 
     const error = validateParameters(
       { price_id, success_url, cancel_url, mode },
@@ -59,19 +72,44 @@ Deno.serve(async (req) => {
       return corsResponse({ error }, 400);
     }
 
-    const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
+    
+    console.log('Auth token received (first 10 chars):', token.substring(0, 10) + '...');
+    
     const {
       data: { user },
       error: getUserError,
     } = await supabase.auth.getUser(token);
 
     if (getUserError) {
-      return corsResponse({ error: 'Failed to authenticate user' }, 401);
+      console.error('Auth error:', getUserError);
+      return corsResponse({ error: 'Failed to authenticate user: ' + getUserError.message }, 401);
     }
 
     if (!user) {
-      return corsResponse({ error: 'User not found' }, 404);
+      return corsResponse({ error: 'User not found or token expired' }, 404);
+    }
+    
+    console.log('Authenticated user:', user.id);
+
+    // Optional: Validate that the price exists in Stripe (helps with debugging)
+    // Skip validation for free plans (empty price_id)
+    if (price_id && price_id.trim() !== '') {
+      try {
+        const price = await stripe.prices.retrieve(price_id);
+        console.log(`Validated Stripe price: ${price.id} for product: ${price.product}`);
+      } catch (priceError) {
+        console.error('Price validation failed:', priceError);
+        return corsResponse({ error: `Invalid price ID: ${price_id}. Please check your Stripe configuration.` }, 400);
+      }
+    } else {
+      // For free plans, we don't create a Stripe session
+      console.log('Free plan detected, skipping Stripe checkout');
+      return corsResponse({ 
+        message: 'Free plan activated', 
+        isFree: true,
+        redirectUrl: success_url 
+      });
     }
 
     const { data: customer, error: getCustomerError } = await supabase
@@ -187,6 +225,29 @@ Deno.serve(async (req) => {
           quantity: 1,
         },
       ],
+      consent_collection: {
+        terms_of_service: 'required',
+      },
+      custom_fields: [
+        {
+          key: 'full_name',
+          label: {
+            type: 'custom',
+            custom: 'Full Name',
+          },
+          type: 'text',
+          optional: false,
+        },
+        {
+          key: 'phone',
+          label: {
+            type: 'custom',
+            custom: 'Phone Number',
+          },
+          type: 'text',
+          optional: true,
+        }
+      ],
       mode,
       success_url,
       cancel_url,
@@ -195,16 +256,16 @@ Deno.serve(async (req) => {
     console.log(`Created checkout session ${session.id} for customer ${customerId}`);
 
     return corsResponse({ sessionId: session.id, url: session.url });
-  } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
-    return corsResponse({ error: error.message }, 500);
+  } catch (error: unknown) {
+    console.error(`Checkout error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return corsResponse({ error: error instanceof Error ? error.message : 'An unexpected error occurred while creating the checkout session' }, 500);
   }
 });
 
 type ExpectedType = 'string' | { values: string[] };
 type Expectations<T> = { [K in keyof T]: ExpectedType };
 
-function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
+function validateParameters<T extends Record<string, unknown>>(values: T, expected: Expectations<T>): string | undefined {
   for (const parameter in values) {
     const expectation = expected[parameter];
     const value = values[parameter];
@@ -217,7 +278,7 @@ function validateParameters<T extends Record<string, any>>(values: T, expected: 
         return `Expected parameter ${parameter} to be a string got ${JSON.stringify(value)}`;
       }
     } else {
-      if (!expectation.values.includes(value)) {
+      if (!expectation.values.includes(value as string)) {
         return `Expected parameter ${parameter} to be one of ${expectation.values.join(', ')}`;
       }
     }

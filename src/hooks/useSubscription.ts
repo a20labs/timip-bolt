@@ -3,12 +3,13 @@ import { useAuthStore } from '../stores/authStore';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 import { supabase } from '../lib/supabase';
 
-type SubscriptionTier = 'free' | 'pro' | 'enterprise';
+type SubscriptionTier = 'free' | 'trial' | 'pro' | 'enterprise';
 
 interface FeatureAccess {
   hasAccess: boolean;
   requiredTier?: SubscriptionTier;
   showUpgrade: () => void;
+  isTrialExpired?: boolean;
 }
 
 interface UpgradeState {
@@ -44,9 +45,9 @@ export function useSubscription() {
 
   // Map Stripe price IDs to subscription tiers
   const PRICE_ID_TO_TIER: Record<string, SubscriptionTier> = {
-    'price_1RdyvG4fVYS0vpWMUUyTvf9q': 'free',      // Starter plan (free)
-    'price_1Rdyc84fVYS0vpWMPcMIkqbP': 'pro',       // Pro Artist plan
-    'price_1RdyfT4fVYS0vpWMgeGm7yJQ': 'enterprise' // Indie Label plan
+    'price_1RdyvG4fVYS0vpWMUUyTvf9q': 'trial',      // Starter plan (14-day trial then $19.99/mo)
+    'price_1Rdyc84fVYS0vpWMPcMIkqbP': 'pro',        // Pro Artist plan
+    'price_1RdyfT4fVYS0vpWMgeGm7yJQ': 'enterprise'  // Indie Label plan
   };
 
   // Fetch real subscription data from Stripe
@@ -102,14 +103,35 @@ export function useSubscription() {
       }
     }
 
+    // Check if user is in trial period (check if subscription exists but is in trial)
+    if (stripeSubscription?.subscription_status === 'trialing') {
+      return 'trial';
+    }
+
     // Fall back to workspace subscription_tier (for backwards compatibility)
     // But only use if we don't have Stripe data
     if (!stripeSubscription && currentWorkspace?.subscription_tier) {
-      return currentWorkspace.subscription_tier;
+      // Map old tier names to new ones
+      if (currentWorkspace.subscription_tier === 'free') {
+        return 'free';
+      }
+      return currentWorkspace.subscription_tier as SubscriptionTier;
     }
 
     // Default to free tier
     return 'free';
+  };
+
+  const isTrialExpired = (): boolean => {
+    if (!stripeSubscription) return false;
+    
+    // Check if subscription was trialing but is now past_due or canceled
+    if (stripeSubscription.subscription_status === 'past_due' || 
+        stripeSubscription.subscription_status === 'canceled') {
+      return true;
+    }
+    
+    return false;
   };
 
   const checkFeatureAccess = (
@@ -117,6 +139,7 @@ export function useSubscription() {
     featureName: string
   ): FeatureAccess => {
     const currentTier = getCurrentTier();
+    const trialExpired = isTrialExpired();
     
     // Superadmin bypasses all restrictions
     if (user?.role === 'superadmin') {
@@ -131,15 +154,19 @@ export function useSubscription() {
     
     const tierHierarchy: Record<SubscriptionTier, number> = {
       free: 0,
-      pro: 1,
-      enterprise: 2
+      trial: 1, // Trial has more access than free but less than paid plans
+      pro: 2,
+      enterprise: 3
     };
 
-    const hasAccess = tierHierarchy[currentTier] >= tierHierarchy[requiredTier];
+    // If trial is expired, treat as free tier
+    const effectiveTier = trialExpired ? 'free' : currentTier;
+    const hasAccess = tierHierarchy[effectiveTier] >= tierHierarchy[requiredTier];
     
     return {
       hasAccess,
       requiredTier: hasAccess ? undefined : requiredTier,
+      isTrialExpired: trialExpired,
       showUpgrade: () => {
         if (!hasAccess) {
           setUpgradeModal({
@@ -190,6 +217,7 @@ export function useSubscription() {
 
   return {
     currentTier: getCurrentTier(),
+    isTrialExpired: isTrialExpired(),
     features,
     upgradeModal,
     closeUpgradeModal,

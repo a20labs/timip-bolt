@@ -48,6 +48,13 @@ TruIndee is a comprehensive music industry platform built for artists, labels, a
 
 The application works out of the box with mock data if no Supabase credentials are provided. Perfect for testing and development!
 
+## 📋 Documentation
+
+- **[User Roles & Permissions](USER_ROLES_PERMISSIONS.md)** - Complete guide to user roles and permission system
+- **[Fan to Artist Conversion](FAN_TO_ARTIST_CONVERSION.md)** - Account conversion system design and implementation
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
+- **[Changelog](CHANGELOG.md)** - Version history and updates
+
 ## 🚀 Features
 
 ### Core Platform
@@ -199,17 +206,65 @@ All tables include Row Level Security (RLS) policies for secure multi-tenant acc
 
 ### Environment Variables
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-STRIPE_SECRET_KEY=your_stripe_secret_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Stripe Payment Processing
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
+STRIPE_SECRET_KEY=sk_test_your_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# Additional Integrations
 TAVUS_API_KEY=your_tavus_api_key
+TWILIO_ACCOUNT_SID=your_twilio_sid
+TWILIO_AUTH_TOKEN=your_twilio_token
 ```
+
+### ⚡ Quick Stripe Setup
+
+**Option 1: Quick Start (Fastest)**
+```bash
+./scripts/stripe-quick-start.sh
+```
+
+**Option 2: Complete Setup (Recommended)**
+```bash
+./scripts/complete-stripe-setup.sh
+```
+
+**Option 3: Manual Setup**
+1. Copy `.env.local.template` to `.env.local`
+2. Add your Stripe keys from [dashboard.stripe.com/test/apikeys](https://dashboard.stripe.com/test/apikeys)
+3. Deploy Edge Functions: `supabase functions deploy stripe-checkout stripe-webhook`
+4. Create products in Stripe Dashboard with these exact price IDs:
+   - Starter: `price_1RdyvG4fVYS0vpWMUUyTvf9q`
+   - Pro Artist: `price_1Rdyc84fVYS0vpWMPcMIkqbP`
+   - Indie Label: `price_1RdyfT4fVYS0vpWMgeGm7yJQ`
+
+### Stripe Integration
+TIMIP includes full Stripe integration for subscription billing:
+
+- **Subscription Plans**: 
+  - Starter (Free): 5 tracks, basic features
+  - Pro Artist ($59.99/month): Unlimited tracks, advanced analytics
+  - Indie Label ($249.99/month): Everything + white-labeling
+- **Secure Checkout**: Stripe Checkout with redirect flow
+- **Webhook Processing**: Real-time subscription status updates
+- **Billing Management**: Customer portal for subscription management
+
+**📚 Detailed Documentation:**
+- Complete Setup: `STRIPE_COMPLETE_SETUP.md`
+- Integration Guide: `STRIPE_INTEGRATION_GUIDE.md`
+- Deployment Checklist: `STRIPE_DEPLOYMENT_CHECKLIST.md`
 
 ### Supabase Edge Functions
 The platform includes several edge functions for external integrations:
+- `stripe-checkout`: Secure Stripe checkout session creation
+- `stripe-webhook`: Webhook processing for subscription updates
 - `isrc-block`: ISRC registration with USISRC
 - `gs1-purchase`: UPC code purchasing
-- `checkout`: Stripe payment processing
 - `nft-mint`: Algorand NFT minting
 - `tavus-generate`: Personalized video generation
 
@@ -261,6 +316,44 @@ supabase db push --linked
 # Deploy all edge functions
 supabase functions deploy
 ```
+
+## 🔧 Supabase CLI
+
+The project includes the Supabase CLI as a dev dependency for easier development and deployment.
+
+### CLI Commands
+```bash
+# Use the local CLI via npm script
+npm run supabase -- --version
+
+# Deploy functions
+npm run supabase -- functions deploy stripe-checkout
+
+# Push database changes
+npm run supabase -- db push --linked
+
+# List functions
+npm run supabase -- functions list
+```
+
+### Updating the CLI
+The CLI is installed as a dev dependency and will be automatically updated when you run:
+```bash
+npm install
+```
+
+To manually update to the latest version:
+```bash
+npm update supabase --save-dev
+```
+
+### CLI Version
+Current version: 2.26.9 (latest)
+
+### TypeScript Configuration
+- **Version**: 5.4.5 (stable, compatible with Deno Edge Functions)
+- **Deno Support**: Edge Functions in `supabase/functions/` use Deno runtime
+- **VS Code**: Configured with Deno support for Edge Functions directory
 
 ## 🧪 Testing
 

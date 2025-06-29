@@ -20,11 +20,19 @@ export class PAMService {
   private mockData = {
     permissions: new Map<string, Permission[]>(),
     auditLogs: [] as AuditLog[],
-    sessions: new Map<string, AccessSession>()
+    sessions: new Map<string, AccessSession>(),
+    users: new Map<string, { 
+      id: string; 
+      email: string; 
+      role: string; 
+      isPaidSubscriber: boolean; 
+      subscriptionTier: 'free' | 'pro' | 'enterprise';
+    }>()
   };
 
   private constructor() {
     this.initializeMockData();
+    this.initializeAyeTwentyUser();
   }
 
   public static getInstance(): PAMService {
@@ -64,6 +72,103 @@ export class PAMService {
         description: 'Access to audit logs',
         resource: 'audit',
         action: 'read',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_admin_pam_access',
+        name: 'PAM Access',
+        description: 'Access to PAM dashboard',
+        resource: 'pam',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+
+    const superAdminPermissions: Permission[] = [
+      ...adminPermissions,
+      {
+        id: 'perm_superadmin_platform_config',
+        name: 'Platform Configuration',
+        description: 'Full platform configuration access',
+        resource: 'platform',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_superadmin_white_label',
+        name: 'White Label Access',
+        description: 'White label platform management',
+        resource: 'white-label',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_superadmin_billing',
+        name: 'Billing Management',
+        description: 'Full billing and subscription management',
+        resource: 'billing',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+
+    const indieLabelPermissions: Permission[] = [
+      {
+        id: 'perm_label_catalog',
+        name: 'Label Catalog Management',
+        description: 'Manage label music catalog',
+        resource: 'catalog',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_label_artists',
+        name: 'Artist Management',
+        description: 'Manage label artists',
+        resource: 'artists',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_label_releases',
+        name: 'Release Management',
+        description: 'Manage releases for label',
+        resource: 'releases',
+        action: '*',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_label_analytics',
+        name: 'Label Analytics',
+        description: 'View label analytics data',
+        resource: 'analytics',
+        action: 'read',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_label_white_label',
+        name: 'White Label Platform',
+        description: 'Access to white label features',
+        resource: 'white-label',
+        action: 'read',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'perm_label_distribution',
+        name: 'Distribution Management',
+        description: 'Manage music distribution',
+        resource: 'distribution',
+        action: '*',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -122,17 +227,85 @@ export class PAMService {
 
     // Store permissions by role
     this.mockData.permissions.set('admin', adminPermissions);
+    this.mockData.permissions.set('superadmin', superAdminPermissions);
+    this.mockData.permissions.set('indielabel', indieLabelPermissions);
     this.mockData.permissions.set('artist', artistPermissions);
     this.mockData.permissions.set('fan', fanPermissions);
-    this.mockData.permissions.set('superadmin', [...adminPermissions, ...artistPermissions]);
+
+    // Initialize mock users with roles and subscription status
+    this.mockData.users.set('ayetwenty@example.com', {
+      id: 'user_ayetwenty',
+      email: 'ayetwenty@example.com',
+      role: 'superadmin',
+      isPaidSubscriber: true,
+      subscriptionTier: 'enterprise'
+    });
+
+    this.mockData.users.set('demo@example.com', {
+      id: 'user_demo',
+      email: 'demo@example.com', 
+      role: 'fan',
+      isPaidSubscriber: false,
+      subscriptionTier: 'free'
+    });
+
+    this.mockData.users.set('artist@example.com', {
+      id: 'user_artist',
+      email: 'artist@example.com',
+      role: 'artist',
+      isPaidSubscriber: true,
+      subscriptionTier: 'pro'
+    });
+
+    // Artists with starter plan (free tier)
+    this.mockData.users.set('artist.starter@example.com', {
+      id: 'user_artist_starter',
+      email: 'artist.starter@example.com',
+      role: 'artist',
+      isPaidSubscriber: false,
+      subscriptionTier: 'free'
+    });
+
+    // Artists with pro plan
+    this.mockData.users.set('artist.pro@example.com', {
+      id: 'user_artist_pro',
+      email: 'artist.pro@example.com',
+      role: 'artist',
+      isPaidSubscriber: true,
+      subscriptionTier: 'pro'
+    });
+
+    // Indie Label users
+    this.mockData.users.set('label@example.com', {
+      id: 'user_label',
+      email: 'label@example.com',
+      role: 'indielabel',
+      isPaidSubscriber: true,
+      subscriptionTier: 'enterprise'
+    });
+
+    // Demo users for the platform
+    this.mockData.users.set('artistdemo@truindee.com', {
+      id: 'user_artist_demo',
+      email: 'artistdemo@truindee.com',
+      role: 'artist',
+      isPaidSubscriber: false,
+      subscriptionTier: 'free'
+    });
+
+    this.mockData.users.set('fandemo@truindee.com', {
+      id: 'user_fan_demo',
+      email: 'fandemo@truindee.com',
+      role: 'fan',
+      isPaidSubscriber: false,
+      subscriptionTier: 'free'
+    });
   }
 
   /**
    * Initialize PAM service with configuration
    */
   async initialize(organizationId: string): Promise<void> {
-    console.log('🔐 PAM: Initializing PAM service for organization:', organizationId);
-    
     // Create default configuration
     this.config = {
       id: `config_${organizationId}`,
@@ -159,8 +332,6 @@ export class PAMService {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-
-    console.log('🔐 PAM: Service initialized successfully');
   }
 
   /**
@@ -171,13 +342,11 @@ export class PAMService {
     permissionCheck: PermissionCheck,
     userRole?: string
   ): Promise<AccessResult> {
-    console.log('🔐 PAM: Checking permission for user:', userId, 'Check:', permissionCheck);
-
     try {
       // Get or create session
       let session = this.mockData.sessions.get(userId);
       if (!session) {
-        session = await this.createSession(userId, userRole || 'fan');
+        session = await this.createSession(userId);
       }
 
       // Calculate risk score
@@ -243,23 +412,20 @@ export class PAMService {
    * Get user's effective permissions
    */
   async getUserEffectivePermissions(userId: string, userRole?: string): Promise<Permission[]> {
-    console.log('🔐 PAM: Getting permissions for user:', userId, 'role:', userRole);
-    
     if (!userRole) {
-      // Try to get role from auth store or default to 'fan'
-      userRole = 'fan';
+      // Try to get role from mock users or default to 'fan'
+      const mockUser = Array.from(this.mockData.users.values()).find(u => u.id === userId || u.email === userId);
+      userRole = mockUser?.role || 'fan';
     }
 
     const permissions = this.mockData.permissions.get(userRole) || [];
-    console.log('🔐 PAM: Found permissions:', permissions.length, 'for role:', userRole);
-    
     return permissions;
   }
 
   /**
    * Create a new session for user
    */
-  async createSession(userId: string, _userRole: string): Promise<AccessSession> {
+  async createSession(userId: string): Promise<AccessSession> {
     const session: AccessSession = {
       id: `session_${userId}_${Date.now()}`,
       user_id: userId,
@@ -288,8 +454,6 @@ export class PAMService {
     };
 
     this.mockData.sessions.set(userId, session);
-    console.log('🔐 PAM: Created session for user:', userId);
-    
     return session;
   }
 
@@ -334,7 +498,6 @@ export class PAMService {
     };
 
     this.mockData.auditLogs.push(auditLog);
-    console.log('🔐 PAM: Logged access:', result, 'for user:', userId, 'action:', action, 'resource:', resource);
   }
 
   /**
@@ -348,7 +511,6 @@ export class PAMService {
       requested_at: new Date().toISOString()
     };
 
-    console.log('🔐 PAM: Access request created:', accessRequest.id);
     return accessRequest;
   }
 
@@ -364,8 +526,6 @@ export class PAMService {
       'SUCCESS',
       { role_id: assignment.role_id, target_user: assignment.user_id }
     );
-
-    console.log('🔐 PAM: Role assigned successfully');
   }
 
   /**
@@ -434,6 +594,122 @@ export class PAMService {
    */
   getPermissionsByRole(role: string): Permission[] {
     return this.mockData.permissions.get(role) || [];
+  }
+
+  /**
+   * Get user information by email or ID
+   */
+  getUserInfo(emailOrId: string) {
+    return Array.from(this.mockData.users.values()).find(
+      user => user.email === emailOrId || user.id === emailOrId
+    );
+  }
+
+  /**
+   * Update user role and subscription status
+   */
+  updateUser(emailOrId: string, updates: { 
+    role?: string; 
+    isPaidSubscriber?: boolean; 
+    subscriptionTier?: 'free' | 'pro' | 'enterprise';
+  }) {
+    const user = this.getUserInfo(emailOrId);
+    if (user) {
+      if (updates.role) user.role = updates.role;
+      if (updates.isPaidSubscriber !== undefined) user.isPaidSubscriber = updates.isPaidSubscriber;
+      if (updates.subscriptionTier) user.subscriptionTier = updates.subscriptionTier;
+      this.mockData.users.set(user.email, user);
+      return user;
+    }
+    return null;
+  }
+
+  /**
+   * Get all users
+   */
+  getAllUsers() {
+    return Array.from(this.mockData.users.values());
+  }
+
+  /**
+   * Initialize "Aye Twenty" user as superadmin with paid subscription
+   */
+  initializeAyeTwentyUser() {
+    this.mockData.users.set('ayetwenty@truindee.com', {
+      id: 'user_aye_twenty',
+      email: 'ayetwenty@truindee.com',
+      role: 'superadmin',
+      isPaidSubscriber: true,
+      subscriptionTier: 'enterprise'
+    });
+    
+    // Also add alternative common emails that might be used
+    this.mockData.users.set('aye.twenty@truindee.com', {
+      id: 'user_aye_twenty_alt',
+      email: 'aye.twenty@truindee.com',
+      role: 'superadmin',
+      isPaidSubscriber: true,
+      subscriptionTier: 'enterprise'
+    });
+  }
+
+  /**
+   * Get user subscription tier
+   */
+  getUserSubscriptionTier(emailOrId: string): 'free' | 'pro' | 'enterprise' {
+    const user = this.getUserInfo(emailOrId);
+    return user?.subscriptionTier || 'free';
+  }
+
+  /**
+   * Check if user can upgrade to specific subscription tier
+   */
+  canUpgradeTo(emailOrId: string, targetTier: 'pro' | 'enterprise'): boolean {
+    const currentTier = this.getUserSubscriptionTier(emailOrId);
+    const tierHierarchy = { free: 0, pro: 1, enterprise: 2 };
+    return tierHierarchy[currentTier] < tierHierarchy[targetTier];
+  }
+
+  /**
+   * Get available upgrade options for user
+   */
+  getUpgradeOptions(emailOrId: string): Array<{ tier: 'pro' | 'enterprise'; name: string; description: string }> {
+    const user = this.getUserInfo(emailOrId);
+    if (!user) return [];
+
+    const options = [];
+    
+    // Artists can upgrade to Pro Artist or Indie Label
+    if (user.role === 'artist') {
+      if (this.canUpgradeTo(emailOrId, 'pro')) {
+        options.push({
+          tier: 'pro' as const,
+          name: 'Pro Artist',
+          description: 'Unlimited tracks, advanced analytics, full AI team access'
+        });
+      }
+      
+      if (this.canUpgradeTo(emailOrId, 'enterprise')) {
+        options.push({
+          tier: 'enterprise' as const,
+          name: 'Indie Label',
+          description: 'White-label platform, custom integrations, dedicated support'
+        });
+      }
+    }
+    
+    // Other roles can also upgrade
+    if (user.role === 'fan' || user.role === 'manager') {
+      if (this.canUpgradeTo(emailOrId, 'pro')) {
+        options.push({
+          tier: 'pro' as const,
+          name: 'Pro',
+          description: 'Enhanced features and priority support'
+        });
+      }
+    }
+
+    return options;
   }
 }
 

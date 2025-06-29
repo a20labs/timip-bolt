@@ -56,14 +56,17 @@ export function Sidebar() {
       hasUser: !!user,
       email: user?.email,
       role: user?.role,
+      userMetadataRole: user?.user_metadata?.role,
       navigationCount: navigation.length,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      fullUser: user
     });
     
     if (navigation.length === 0 && user) {
       console.warn('⚠️ Sidebar: User exists but no navigation items!', {
         user: user,
-        userRole: user.role || user.user_metadata?.role
+        userRole: user.role || user.user_metadata?.role,
+        email: user.email
       });
     }
   }, [user, navigation]);
@@ -259,8 +262,9 @@ export function Sidebar() {
           }`}>
             <p className="text-xs font-medium">
               {currentTier === 'free' ? 'STARTER' : 
+               currentTier === 'trial' ? 'STARTER (TRIAL)' :
                currentTier === 'pro' ? 'PRO ARTIST' :
-               currentTier === 'enterprise' ? 'INDIE LABEL' : 
+               currentTier === 'enterprise' ? 'INDEE LABEL' : 
                String(currentTier || 'STARTER').toUpperCase()} PLAN
             </p>
             <p className="text-xs opacity-80 mt-1">
@@ -302,7 +306,7 @@ export function Sidebar() {
         isOpen={upgradeModal.isOpen}
         onClose={closeUpgradeModal}
         feature={upgradeModal.feature}
-        requiredTier={upgradeModal.requiredTier === 'free' ? 'pro' : upgradeModal.requiredTier as 'pro' | 'enterprise'}
+        requiredTier={upgradeModal.requiredTier === 'free' ? 'pro' : upgradeModal.requiredTier === 'trial' ? 'pro' : upgradeModal.requiredTier}
       />
     </>
   );

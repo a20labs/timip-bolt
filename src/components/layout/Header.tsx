@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bell, User, Shield, LogOut, Settings, Heart, Phone, Crown } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { GlobalSearch } from '../search/GlobalSearch';
+import { UserModeToggle } from '../ui/UserModeToggle';
 import { useAuthStore } from '../../stores/authStore';
 import { useDialerStore } from '../../stores/dialerStore';
 import { Link, useNavigate } from 'react-router-dom';
@@ -61,6 +62,8 @@ export function Header() {
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
+    // Explicitly navigate to landing page after sign out
+    navigate('/', { replace: true });
   };
   
   const handleViewProfile = () => {
@@ -75,6 +78,7 @@ export function Header() {
         <GlobalSearch />
         
         <div className="flex items-center gap-4">
+          <UserModeToggle />
           {phoneFeatureEnabled && (
             <Button variant="ghost" size="sm" onClick={() => openDialer()}>
               <Phone className="w-5 h-5" />

@@ -31,29 +31,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   currentWorkspace: null,
   authTimestamp: 0, // Initialize timestamp
   setUser: (user) => {
-    console.log('🔐 AuthStore.setUser called:', {
-      email: user?.email,
-      role: user?.role,
-      timestamp: Date.now(),
-      userObject: user
-    });
     set({ user, loading: false, authTimestamp: Date.now() });
-    
-    // Add a small delay and then log again to verify state persistence
-    setTimeout(() => {
-      const currentState = get();
-      console.log('🔐 AuthStore state after setUser (100ms later):', {
-        hasUser: !!currentState.user,
-        email: currentState.user?.email,
-        loading: currentState.loading
-      });
-    }, 100);
   },
   setCurrentWorkspace: (workspaceId) => set({ currentWorkspace: workspaceId }),
   signOut: async () => {
     try {
       await supabase.auth.signOut();
-      console.log('User signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -66,17 +49,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   getUserRole: () => {
     const { user } = get();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (user as any)?.role || user?.user_metadata?.role || 'fan';
+    return (user as any)?.role || user?.user_metadata?.role || 'artist';
   },
 }));
 
 // Initialize auth state safely
 const initializeAuth = async () => {
   try {
-    console.log('🔐 AuthStore: Initializing auth...');
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('🔐 AuthStore: Initial session:', session);
-    useAuthStore.getState().setUser(session?.user as ExtendedUser ?? null);
+    
+    if (session?.user) {
+      const user = session.user as ExtendedUser;
+      
+      // If user doesn't have a role, assign default role
+      if (!user.role && !user.user_metadata?.role) {
+        console.log('🔐 AuthStore: Existing user without role, assigning default');
+        
+        const enhancedUser = {
+          ...user,
+          role: 'artist',
+          user_metadata: {
+            ...user.user_metadata,
+            role: 'artist'
+          }
+        };
+        
+        useAuthStore.getState().setUser(enhancedUser);
+      } else {
+        useAuthStore.getState().setUser(user);
+      }
+    } else {
+      useAuthStore.getState().setUser(null);
+    }
   } catch (error) {
     console.error('🔐 AuthStore: Auth initialization error:', error);
     useAuthStore.getState().setUser(null);
@@ -84,15 +88,37 @@ const initializeAuth = async () => {
 };
 
 // Initialize auth
-console.log('🔐 AuthStore: Starting initialization...');
 initializeAuth();
 
 // Listen for auth changes
 try {
-  console.log('🔐 AuthStore: Setting up auth state change listener...');
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log('🔐 AuthStore: Auth state change event:', event, 'Session:', session);
-    useAuthStore.getState().setUser(session?.user as ExtendedUser ?? null);
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('🔐 AuthStore: Auth state change event:', event);
+    
+    if (session?.user) {
+      const user = session.user as ExtendedUser;
+      
+      // If user doesn't have a role, try to assign one based on email or default to artist
+      if (!user.role && !user.user_metadata?.role) {
+        console.log('🔐 AuthStore: New user detected, assigning default role');
+        
+        // Create an enhanced user object with default role
+        const enhancedUser = {
+          ...user,
+          role: 'artist', // Default new users to artist
+          user_metadata: {
+            ...user.user_metadata,
+            role: 'artist'
+          }
+        };
+        
+        useAuthStore.getState().setUser(enhancedUser);
+      } else {
+        useAuthStore.getState().setUser(user);
+      }
+    } else {
+      useAuthStore.getState().setUser(null);
+    }
   });
 } catch (error) {
   console.error('🔐 AuthStore: Auth state change listener error:', error);

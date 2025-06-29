@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Zap, CheckCircle } from 'lucide-react';
 import { Button } from './Button';
@@ -22,7 +21,17 @@ export function SubscriptionBanner() {
     return null;
   }
 
-  // For free tier users, show upgrade to Pro
+  // Get user role to determine upgrade path
+  const getUserRole = () => {
+    if (user?.email === 'artistdemo@truindee.com') return 'artist';
+    if (user?.email === 'fandemo@truindee.com') return 'fan';
+    return user?.role || 'artist';
+  };
+
+  const userRole = getUserRole();
+  const isArtist = userRole === 'artist';
+
+  // For free tier users, show upgrade options
   if (currentTier === 'free') {
     return (
       <motion.div
@@ -37,19 +46,35 @@ export function SubscriptionBanner() {
             </div>
             <div className="flex-1">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-                Upgrade to Pro Artist
+                {isArtist ? 'Upgrade Your Artist Plan' : 'Upgrade to Pro'}
               </h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                Unlock unlimited tracks, advanced analytics, and full AI team access.
+                {isArtist 
+                  ? 'Choose Pro Artist for unlimited tracks and analytics, or Indee Label for white-label features.'
+                  : 'Unlock advanced features and priority support.'
+                }
               </p>
-              <Button 
-                size="sm"
-                onClick={() => createCheckoutSession('price_1Rdyc84fVYS0vpWMPcMIkqbP')}
-                loading={isLoading}
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                Upgrade Now
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm"
+                  onClick={() => createCheckoutSession('price_1Rdyc84fVYS0vpWMPcMIkqbP')}
+                  loading={isLoading}
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  {isArtist ? 'Pro Artist' : 'Upgrade Now'}
+                </Button>
+                {isArtist && (
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    onClick={() => createCheckoutSession('price_1RdyfT4fVYS0vpWMgeGm7yJQ')}
+                    loading={isLoading}
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Indee Label
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </Card>
@@ -57,7 +82,7 @@ export function SubscriptionBanner() {
     );
   }
 
-  // For pro tier users, show confirmation
+  // For pro tier users, show confirmation and option to upgrade to enterprise (for artists)
   if (currentTier === 'pro') {
     return (
       <motion.div
@@ -72,20 +97,36 @@ export function SubscriptionBanner() {
             </div>
             <div className="flex-1">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-                Pro Artist Plan Active
+                Pro {isArtist ? 'Artist' : ''} Plan Active
               </h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                 You have access to all Pro features including unlimited tracks, advanced analytics, and full AI team access.
               </p>
+              {isArtist && (
+                <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">
+                  Want white-label features? Upgrade to Indee Label for custom branding and integrations.
+                </p>
+              )}
             </div>
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => features.apiAccess().showUpgrade()}
-            >
-              <Crown className="w-4 h-4 mr-2" />
-              Manage Plan
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => features.apiAccess().showUpgrade()}
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Manage Plan
+              </Button>
+              {isArtist && (
+                <Button 
+                  size="sm"
+                  onClick={() => createCheckoutSession('price_1RdyfT4fVYS0vpWMgeGm7yJQ')}
+                  loading={isLoading}
+                >
+                  Upgrade to Indee Label
+                </Button>
+              )}
+            </div>
           </div>
         </Card>
       </motion.div>

@@ -91,7 +91,7 @@ export function BillingSettings() {
       current: currentTier === 'pro'
     },
     {
-      name: 'Indie Label',
+      name: 'Indee Label',
       price: 249.99,
       yearlyPrice: 2399.90, // Save ~$600 (20%)
       features: [

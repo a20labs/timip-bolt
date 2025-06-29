@@ -1,35 +1,38 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Bot, 
   Users, 
   Briefcase, 
-  Shield, 
   Mic, 
-  Send, 
   Settings,
   Info,
-  ChevronRight,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
   Crown,
   Lock,
   Plus,
-  Edit,
-  Trash2
+  Edit
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { AgentChat } from '../../components/agents/AgentChat';
-import { useAgentChat } from '../../hooks/useAgentChat';
 import { useSubscription } from '../../hooks/useSubscription';
 import { UpgradeModal } from '../../components/ui/UpgradeModal';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { Link } from 'react-router-dom';
 import { CreateAgentModal } from '../../components/agents/CreateAgentModal';
 import { EditAgentModal } from '../../components/agents/EditAgentModal';
+import { useAuthStore } from '../../stores/authStore';
+
+interface CustomAgent {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  skills: { name: string; value: number }[];
+  avatarUrl: string;
+  headerUrl?: string;
+  isCustom: boolean;
+}
 
 interface AgentCardProps {
   name: string;
@@ -81,7 +84,7 @@ function AgentCard({
         </div>
         <div className="flex gap-1">
           {isCustom && (
-            <Button variant="ghost\" size="sm\" onClick={onEdit}>
+            <Button variant="ghost" size="sm" onClick={onEdit}>
               <Edit className="w-4 h-4" />
             </Button>
           )}
@@ -133,20 +136,20 @@ export function AiTeamPage() {
   const [showAgentInfo, setShowAgentInfo] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingAgent, setEditingAgent] = useState<any>(null);
+  const [editingAgent, setEditingAgent] = useState<CustomAgent | null>(null);
   const { features, upgradeModal, closeUpgradeModal, currentTier } = useSubscription();
-  const { agents, createCustomAgent, updateAgent, deleteAgent } = useAgentChat();
+  const { user } = useAuthStore();
   
-  // Check if user has access to agent chat (Pro or Indie Label tier)
+  // Check if user has access to agent chat (Pro or Indee Label tier)
   const agentAccess = features.apiAccess();
   const isPro = currentTier === 'pro' || currentTier === 'enterprise'; // No change in the logic
 
   // Custom agents (stored in local state for this demo)
-  const [customAgents, setCustomAgents] = useState<any[]>([]);
+  const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
 
   const handleChatWithAgent = (agentName: string) => {
-    // PAM is available to all users
-    if (agentName === 'PAM') {
+    // PAM and Remy are available to all users
+    if (agentName === 'PAM' || agentName === 'Remy') {
       setSelectedAgent(agentName);
       setShowAgentChat(true);
       return;
@@ -166,17 +169,17 @@ export function AiTeamPage() {
     setShowAgentInfo(agentName);
   };
 
-  const handleEditAgent = (agent: any) => {
+  const handleEditAgent = (agent: CustomAgent) => {
     setEditingAgent(agent);
     setShowEditModal(true);
   };
 
-  const handleCreateAgent = (newAgent: any) => {
+  const handleCreateAgent = (newAgent: CustomAgent) => {
     setCustomAgents([...customAgents, newAgent]);
     setShowCreateModal(false);
   };
 
-  const handleUpdateAgent = (updatedAgent: any) => {
+  const handleUpdateAgent = (updatedAgent: CustomAgent) => {
     setCustomAgents(customAgents.map(agent => 
       agent.id === updatedAgent.id ? updatedAgent : agent
     ));
@@ -194,6 +197,19 @@ export function AiTeamPage() {
 
   // Professional team agents
   const professionalTeam = [
+    {
+      name: 'Remy',
+      role: 'Fan Relations & Customer Service Manager',
+      description: 'Your warm, enthusiastic community-centric support specialist. Combines superfan energy with VIP concierge service.',
+      skills: [
+        { name: 'Fan Engagement', value: 98 },
+        { name: 'Customer Support', value: 95 },
+        { name: 'Community Building', value: 92 }
+      ],
+      locked: false, // Remy is available to all users
+      avatarUrl: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=600',
+      headerUrl: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+    },
     {
       name: 'PAM',
       role: 'Personal Artist Manager',
@@ -337,6 +353,10 @@ export function AiTeamPage() {
               <Plus className="w-4 h-4 mr-2" />
               Create Custom Agent
             </Button>
+            <Button variant="outline" onClick={() => handleChatWithAgent('Remy')}>
+              <Bot className="w-4 h-4 mr-2" />
+              Chat with Remy
+            </Button>
             <Button onClick={() => handleChatWithAgent('PAM')}>
               <Bot className="w-4 h-4 mr-2" />
               Chat with PAM
@@ -356,7 +376,7 @@ export function AiTeamPage() {
                   Upgrade to Pro Artist to Unlock All AI Team Members
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  Upgrade to Pro to access all AI team members. PAM is available on all plans, but the full team is exclusive to Pro subscribers.
+                  Upgrade to Pro to access all AI team members. Remy (Fan Relations) and PAM (Artist Manager) are available on all plans, but the full team is exclusive to Pro subscribers.
                 </p>
                 <div className="flex gap-3">
                   <Button 
@@ -509,7 +529,7 @@ export function AiTeamPage() {
             {/* Header Image */}
             <div className="h-32 relative">
               <img 
-                src={currentAgent.headerUrl} 
+                src={currentAgent.headerUrl || currentAgent.avatarUrl} 
                 alt={`${currentAgent.name} header`}
                 className="w-full h-full object-cover"
               />
@@ -610,7 +630,7 @@ export function AiTeamPage() {
         isOpen={upgradeModal.isOpen}
         onClose={closeUpgradeModal}
         feature={upgradeModal.feature}
-        requiredTier={upgradeModal.requiredTier}
+        requiredTier={upgradeModal.requiredTier === 'free' ? 'pro' : upgradeModal.requiredTier === 'trial' ? 'pro' : upgradeModal.requiredTier}
       />
     </>
   );

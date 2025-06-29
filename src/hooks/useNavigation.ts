@@ -422,7 +422,18 @@ export function useNavigation() {
     }
 
     // Get user role with priority: user.role > user_metadata.role > default
-    let userRole = user.role || (user.user_metadata?.role as string) || 'fan';
+    let userRole = user.role || (user.user_metadata?.role as string);
+    
+    // Check for dual-mode users and current mode preference
+    const capabilities = (user.user_metadata?.capabilities as string[]) || [];
+    const isDualMode = capabilities.includes('fan') && capabilities.includes('artist');
+    
+    if (isDualMode) {
+      // For dual-mode users, check their current mode preference
+      const currentMode = localStorage.getItem('userMode') as 'fan' | 'artist' || 'artist';
+      userRole = currentMode;
+      console.log('🧭 Navigation: Dual-mode user in', currentMode, 'mode');
+    }
     
     // Special handling for demo accounts - override role based on email
     if (user.email === 'fandemo@truindee.com') {
@@ -431,6 +442,15 @@ export function useNavigation() {
     } else if (user.email === 'artistdemo@truindee.com') {
       userRole = 'artist'; // or could be 'admin' - both work now
       console.log('🧭 Navigation: Demo artist role confirmed as:', userRole);
+    } else if (user.email === 'admin@truindee.com') {
+      userRole = 'superadmin';
+      console.log('🧭 Navigation: Override admin role to "superadmin"');
+    }
+    
+    // Default to 'artist' for new users if no role is set
+    if (!userRole) {
+      userRole = 'artist';
+      console.log('🧭 Navigation: No role found, defaulting to "artist" for new user');
     }
     
     console.log('🧭 Navigation: Final determined user role:', userRole);

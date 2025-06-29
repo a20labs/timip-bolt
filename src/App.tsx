@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/layout/Layout';
 import { AuthPage } from './components/auth/AuthPage';
+import { AuthCallback } from './components/auth/AuthCallback';
 import { PhoneDialer } from './components/dialer/PhoneDialer';
 import { PWAComponents } from './components/PWAComponents';
 import { MobileOptimizer } from './components/MobileOptimizer';
@@ -46,6 +47,11 @@ const PlayerDemo = lazy(() => import('./pages/PlayerDemo').then(module => ({ def
 
 // Add subscription page
 const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage').then(module => ({ default: module.SubscriptionPage })));
+
+// Add new landing pages
+const UserTypeLanding = lazy(() => import('./pages/UserTypeLanding').then(module => ({ default: module.UserTypeLanding })));
+const FanLanding = lazy(() => import('./pages/FanLanding').then(module => ({ default: module.FanLanding })));
+const ArtistLanding = lazy(() => import('./pages/ArtistLanding').then(module => ({ default: module.ArtistLanding })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -155,13 +161,17 @@ function AppContent() {
             </Layout>
           ) : (
             <Routes>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<UserTypeLanding />} />
+              <Route path="/fan-landing" element={<FanLanding />} />
+              <Route path="/artist-landing" element={<ArtistLanding />} />
+              <Route path="/original-landing" element={<LandingPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy/data-deletion" element={<DataDeletion />} />
               <Route path="/privacy/deletion-status" element={<DeletionStatus />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="*" element={<LandingPage />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="*" element={<UserTypeLanding />} />
             </Routes>
           )}
         </Suspense>
